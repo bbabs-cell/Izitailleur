@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, UsePipes } from "@nestjs/common";
+import { Body, Controller, HttpCode, Post } from "@nestjs/common";
 import { loginSchema, refreshSchema, registerSchema } from "@izitailleur/shared";
 import type { LoginDto, RefreshDto, RegisterDto } from "@izitailleur/shared";
 import { AuthService } from "./auth.service";
@@ -9,22 +9,19 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post("register")
-  @UsePipes(new ZodValidationPipe(registerSchema))
-  register(@Body() dto: RegisterDto) {
+  register(@Body(new ZodValidationPipe(registerSchema)) dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post("login")
   @HttpCode(200)
-  @UsePipes(new ZodValidationPipe(loginSchema))
-  login(@Body() dto: LoginDto) {
+  login(@Body(new ZodValidationPipe(loginSchema)) dto: LoginDto) {
     return this.authService.login(dto);
   }
 
   @Post("refresh")
   @HttpCode(200)
-  @UsePipes(new ZodValidationPipe(refreshSchema))
-  refresh(@Body() dto: RefreshDto) {
+  refresh(@Body(new ZodValidationPipe(refreshSchema)) dto: RefreshDto) {
     return this.authService.refresh(dto.refreshToken);
   }
 }

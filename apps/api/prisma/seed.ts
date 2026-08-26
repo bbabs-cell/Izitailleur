@@ -14,16 +14,78 @@ async function main() {
 
   const passwordHash = await argon2.hash("demo12345");
 
+  const [owner, tailor] = await Promise.all([
+    prisma.user.create({
+      data: { workshopId: workshop.id, fullName: "Mamadou Diallo", phone: "+221700000001", passwordHash, role: "OWNER" },
+    }),
+    prisma.user.create({
+      data: { workshopId: workshop.id, fullName: "Ibrahima Sow", phone: "+221700000002", passwordHash, role: "TAILOR" },
+    }),
+  ]);
   await prisma.user.createMany({
     data: [
-      { workshopId: workshop.id, fullName: "Mamadou Diallo", phone: "+221700000001", passwordHash, role: "OWNER" },
-      { workshopId: workshop.id, fullName: "Ibrahima Sow", phone: "+221700000002", passwordHash, role: "TAILOR" },
       { workshopId: workshop.id, fullName: "Fatou Ndiaye", phone: "+221700000003", passwordHash, role: "APPRENTICE" },
       { workshopId: workshop.id, fullName: "Aïssata Bâ", phone: "+221700000004", passwordHash, role: "MANAGER" },
     ],
   });
 
-  console.log("Données de démonstration créées pour", workshop.name);
+  const customer = await prisma.customer.create({
+    data: {
+      workshopId: workshop.id,
+      firstName: "Mamadou",
+      lastName: "Client",
+      phone: "+221709999999",
+      notes: "Préfère les tissus Bazin",
+    },
+  });
+
+  const profile = await prisma.measurementProfile.create({
+    data: { workshopId: workshop.id, customerId: customer.id, label: "Boubou standard" },
+  });
+  await prisma.measurement.create({
+    data: { profileId: profile.id, values: { poitrine: 104, taille: 92, epaule: 48 } },
+  });
+
+  for (let i = 248; i <= 250; i++) {
+    await prisma.workshop.update({
+      where: { id: workshop.id },
+      data: { orderSequence: { increment: 1 } },
+    });
+    const order = await prisma.order.create({
+      data: {
+        workshopId: workshop.id,
+        reference: String(i).padStart(4, "0"),
+        customerId: customer.id,
+        measurementProfileId: profile.id,
+        modelName: "Boubou homme",
+        fabricDescription: "Bazin bleu",
+        price: 25000,
+        deposit: 10000,
+        dueDate: new Date(Date.now() + (i - 247) * 5 * 86400000),
+        assignedToId: tailor.id,
+        instructions: "Faire le col selon le modèle. Ajouter une poche intérieure.",
+        status: "NEW",
+      },
+    });
+    await prisma.orderStatusChange.create({
+      data: { orderId: order.id, fromStatus: null, toStatus: "NEW" },
+    });
+    await prisma.orderTask.create({
+      data: { orderId: order.id, title: "Vérifier les manches", assignedToId: tailor.id },
+    });
+  }
+
+  await prisma.appointment.create({
+    data: {
+      workshopId: workshop.id,
+      customerId: customer.id,
+      type: "FITTING",
+      title: "Essayage boubou #0248",
+      startAt: new Date(Date.now() + 2 * 86400000),
+    },
+  });
+
+  console.log("Données de démonstration créées pour", workshop.name, "— propriétaire :", owner.phone);
 }
 
 main()

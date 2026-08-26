@@ -1,9 +1,13 @@
 import { StyleSheet, Text, View } from "react-native";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { useAuth } from "../auth/AuthContext";
 import { colors, spacing, typography } from "../theme/tokens";
+import type { AppStackParamList } from "../navigation/RootNavigator";
+
+type Props = NativeStackScreenProps<AppStackParamList, "Home">;
 
 const ROLE_LABELS: Record<string, string> = {
   OWNER: "Propriétaire",
@@ -16,7 +20,7 @@ const ROLE_LABELS: Record<string, string> = {
   DELIVERY: "Livreur",
 };
 
-export function HomeScreen() {
+export function HomeScreen({ navigation }: Props) {
   const { user, logout } = useAuth();
 
   return (
@@ -27,10 +31,14 @@ export function HomeScreen() {
       <Card style={styles.card}>
         <Badge label={ROLE_LABELS[user?.role ?? ""] ?? user?.role ?? ""} tone="info" />
         <Text style={styles.body}>
-          Le tableau de bord (commandes du jour, rendez-vous, urgences, argent, stock) arrive en
-          Phase 2 du projet, une fois les modules Clients, Commandes et Calendrier construits.
+          Le tableau de bord (urgences, argent, stock) arrive avec les modules Finances et
+          Atelier. En attendant, gérez vos clients, commandes et rendez-vous ci-dessous.
         </Text>
       </Card>
+
+      <Button label="Clients" onPress={() => navigation.navigate("Customers")} />
+      <Button label="Commandes" onPress={() => navigation.navigate("Orders")} />
+      <Button label="Calendrier" onPress={() => navigation.navigate("Calendar")} />
 
       <Button label="Se déconnecter" variant="secondary" onPress={logout} testID="logout-button" />
     </View>
