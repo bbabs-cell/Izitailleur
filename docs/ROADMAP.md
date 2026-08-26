@@ -5,9 +5,10 @@ Vérifier l'interface → Documenter. On ne passe pas à la phase suivante si la
 contient des erreurs critiques non résolues.
 
 - [x] **PHASE 0 — Analyse** : inspection du dépôt (vide), choix d'architecture, documentation
-      initiale. *(en cours de validation)*
-- [ ] **PHASE 1 — Fondation** : structure monorepo, navigation, thème, design system,
-      composants de base, authentification, utilisateurs.
+      initiale.
+- [x] **PHASE 1 — Fondation** : monorepo pnpm, API NestJS (auth JWT + RBAC, Prisma/PostgreSQL),
+      app mobile Expo (navigation, design system, écrans Connexion/Inscription/Accueil).
+      Tests réels : 8/8 (API) + 5/5 (mobile).
 - [ ] **PHASE 2 — Cœur métier** : clients, mensurations, commandes, photos, tâches, calendrier.
 - [ ] **PHASE 3 — Atelier** : apprentis, équipes, tissus, stocks, fournisseurs, problèmes.
 - [ ] **PHASE 4 — Finances** : paiements, dettes, reçus, statistiques financières.
