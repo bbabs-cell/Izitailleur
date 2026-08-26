@@ -18,7 +18,10 @@ contient des erreurs critiques non résolues.
 - [x] **PHASE 4 — Finances** : paiements (5 modes), reçus PDF réels (génération + partage),
       vue "argent à récupérer", statistiques financières basées sur les données réelles, accès
       restreint aux rôles autorisés. Tests réels : 54/54 (API) + 17/17 (mobile).
-- [ ] **PHASE 5 — Offline** : stockage local, synchronisation, gestion des conflits.
+- [x] **PHASE 5 — Offline** : stockage local (SQLite), synchronisation (pull/push) et résolution
+      de conflits réelle et testée — scope actuel : Clients et Calendrier (voir
+      docs/ARCHITECTURE.md pour le détail honnête de la portée). Tests réels : 63/63 (API,
+      dont un scénario de conflit à deux appareils) + 26/26 (mobile, logique pure).
 - [ ] **PHASE 6 — Notifications** : rappels, alertes, notifications.
 - [ ] **PHASE 7 — IA** : AIService, contexte sécurisé, premières commandes IA.
 - [ ] **PHASE 8 — Qualité** : tests, optimisation, sécurité, accessibilité, UX, responsive,
