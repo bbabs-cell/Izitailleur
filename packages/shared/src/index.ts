@@ -3,3 +3,6 @@ export * from "./auth.schemas";
 export * from "./customer.schemas";
 export * from "./order.schemas";
 export * from "./appointment.schemas";
+export * from "./fabric.schemas";
+export * from "./issue.schemas";
+export * from "./employee.schemas";

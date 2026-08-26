@@ -85,6 +85,35 @@ async function main() {
     },
   });
 
+  const supplier = await prisma.supplier.create({
+    data: { workshopId: workshop.id, name: "Tissus Sandaga", phone: "+221701112233" },
+  });
+  await prisma.fabric.create({
+    data: {
+      workshopId: workshop.id,
+      name: "Bazin bleu",
+      color: "Bleu",
+      quantity: 8,
+      unit: "m",
+      supplierId: supplier.id,
+      location: "Étagère A",
+    },
+  });
+  await prisma.fabric.create({
+    data: { workshopId: workshop.id, name: "Wax rouge", color: "Rouge", quantity: 2, unit: "m" },
+  });
+
+  await prisma.workshopIssue.create({
+    data: {
+      workshopId: workshop.id,
+      title: "Machine à coudre 2 en panne",
+      category: "MACHINE_BREAKDOWN",
+      priority: "URGENT",
+      description: "Ne démarre plus depuis ce matin",
+      assignedToId: tailor.id,
+    },
+  });
+
   console.log("Données de démonstration créées pour", workshop.name, "— propriétaire :", owner.phone);
 }
 

@@ -13,6 +13,14 @@ import { OrdersListScreen } from "../screens/OrdersListScreen";
 import { OrderDetailScreen } from "../screens/OrderDetailScreen";
 import { OrderFormScreen } from "../screens/OrderFormScreen";
 import { CalendarScreen } from "../screens/CalendarScreen";
+import { TeamListScreen } from "../screens/TeamListScreen";
+import { TeamInviteScreen } from "../screens/TeamInviteScreen";
+import { FabricsListScreen } from "../screens/FabricsListScreen";
+import { FabricFormScreen } from "../screens/FabricFormScreen";
+import { FabricDetailScreen } from "../screens/FabricDetailScreen";
+import { SuppliersListScreen } from "../screens/SuppliersListScreen";
+import { IssuesListScreen } from "../screens/IssuesListScreen";
+import { IssueFormScreen } from "../screens/IssueFormScreen";
 import { colors } from "../theme/tokens";
 
 export type AuthStackParamList = {
@@ -30,6 +38,14 @@ export type AppStackParamList = {
   OrderDetail: { orderId: string };
   OrderForm: { customerId?: string };
   Calendar: undefined;
+  Team: undefined;
+  TeamInvite: undefined;
+  Fabrics: undefined;
+  FabricForm: undefined;
+  FabricDetail: { fabricId: string };
+  Suppliers: undefined;
+  Issues: undefined;
+  IssueForm: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -87,6 +103,34 @@ export function RootNavigator() {
             options={{ title: "Nouvelle commande" }}
           />
           <AppStack.Screen name="Calendar" component={CalendarScreen} options={{ title: "Calendrier" }} />
+          <AppStack.Screen name="Team" component={TeamListScreen} options={{ title: "Équipe" }} />
+          <AppStack.Screen
+            name="TeamInvite"
+            component={TeamInviteScreen}
+            options={{ title: "Inviter un membre" }}
+          />
+          <AppStack.Screen name="Fabrics" component={FabricsListScreen} options={{ title: "Tissus" }} />
+          <AppStack.Screen
+            name="FabricForm"
+            component={FabricFormScreen}
+            options={{ title: "Nouveau tissu" }}
+          />
+          <AppStack.Screen
+            name="FabricDetail"
+            component={FabricDetailScreen}
+            options={{ title: "Tissu" }}
+          />
+          <AppStack.Screen
+            name="Suppliers"
+            component={SuppliersListScreen}
+            options={{ title: "Fournisseurs" }}
+          />
+          <AppStack.Screen name="Issues" component={IssuesListScreen} options={{ title: "Problèmes" }} />
+          <AppStack.Screen
+            name="IssueForm"
+            component={IssueFormScreen}
+            options={{ title: "Signaler un problème" }}
+          />
         </AppStack.Navigator>
       ) : (
         <AuthStack.Navigator screenOptions={{ headerShown: false }}>

@@ -32,6 +32,9 @@ model Workshop {
   customers    Customer[]
   orders       Order[]
   appointments Appointment[]
+  suppliers    Supplier[]
+  fabrics      Fabric[]
+  issues       WorkshopIssue[]
 }
 
 model User {
@@ -47,8 +50,9 @@ model User {
   updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
 
-  assignedOrders Order[]     @relation("OrderAssignee")
-  assignedTasks  OrderTask[] @relation("TaskAssignee")
+  assignedOrders Order[]         @relation("OrderAssignee")
+  assignedTasks  OrderTask[]     @relation("TaskAssignee")
+  assignedIssues WorkshopIssue[] @relation("IssueAssignee")
 
   @@index([workshopId])
 }
@@ -133,6 +137,9 @@ model Order {
   measurementProfile   MeasurementProfile? @relation(fields: [measurementProfileId], references: [id])
   modelName            String
   fabricDescription    String?
+  fabricId             String?
+  fabric               Fabric?             @relation(fields: [fabricId], references: [id])
+  fabricQuantity       Float?
   quantity             Int                 @default(1)
   price                Int
   deposit              Int                 @default(0)
@@ -153,6 +160,7 @@ model Order {
   tasks         OrderTask[]
   statusHistory OrderStatusChange[]
   appointments  Appointment[]
+  issues        WorkshopIssue[]
 
   @@unique([workshopId, reference])
   @@index([workshopId])
@@ -230,4 +238,110 @@ model Appointment {
   deletedAt  DateTime?
 
   @@index([workshopId, startAt])
+}
+
+model Supplier {
+  id         String    @id @default(uuid())
+  workshopId String
+  workshop   Workshop  @relation(fields: [workshopId], references: [id])
+  name       String
+  phone      String?
+  whatsapp   String?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  fabrics Fabric[]
+
+  @@index([workshopId])
+}
+
+model Fabric {
+  id            String    @id @default(uuid())
+  workshopId    String
+  workshop      Workshop  @relation(fields: [workshopId], references: [id])
+  name          String
+  reference     String?
+  color         String?
+  quantity      Float     @default(0)
+  unit          String    @default("m")
+  purchasePrice Int?
+  supplierId    String?
+  supplier      Supplier? @relation(fields: [supplierId], references: [id])
+  location      String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  movements FabricMovement[]
+  orders    Order[]
+
+  @@index([workshopId])
+}
+
+enum FabricMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+model FabricMovement {
+  id        String             @id @default(uuid())
+  fabricId  String
+  fabric    Fabric             @relation(fields: [fabricId], references: [id])
+  type      FabricMovementType
+  quantity  Float
+  orderId   String?
+  note      String?
+  createdAt DateTime           @default(now())
+
+  @@index([fabricId])
+}
+
+enum IssueCategory {
+  BAD_MEASUREMENT
+  INSUFFICIENT_FABRIC
+  DEFECTIVE_FABRIC
+  BAD_CUT
+  ALTERATION
+  DELAY
+  CUSTOMER_ABSENT
+  MODEL_CHANGE
+  MACHINE_BREAKDOWN
+  APPRENTICE_LATE
+  SUPPLIER_LATE
+  PAYMENT
+  DELIVERY
+  OTHER
+}
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+model WorkshopIssue {
+  id           String        @id @default(uuid())
+  workshopId   String
+  workshop     Workshop      @relation(fields: [workshopId], references: [id])
+  title        String
+  description  String?
+  category     IssueCategory
+  priority     Priority      @default(NORMAL)
+  orderId      String?
+  order        Order?        @relation(fields: [orderId], references: [id])
+  assignedToId String?
+  assignedTo   User?         @relation("IssueAssignee", fields: [assignedToId], references: [id])
+  photoUrl     String?
+  status       IssueStatus   @default(OPEN)
+  solution     String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  resolvedAt   DateTime?
+
+  @@index([workshopId])
+  @@index([workshopId, status])
 }

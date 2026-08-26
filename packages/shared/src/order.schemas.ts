@@ -39,6 +39,8 @@ export const createOrderSchema = z.object({
   measurementProfileId: z.string().uuid().optional(),
   modelName: z.string().min(1).max(120),
   fabricDescription: z.string().max(200).optional(),
+  fabricId: z.string().uuid().optional(),
+  fabricQuantity: z.number().positive().optional(),
   quantity: z.number().int().min(1).default(1),
   price: z.number().int().min(0),
   deposit: z.number().int().min(0).default(0),

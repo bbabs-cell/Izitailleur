@@ -46,6 +46,25 @@ export class OrdersService {
       throw new BadRequestException("Client introuvable pour cet atelier");
     }
 
+    let fabric: { id: string; quantity: number; unit: string } | null = null;
+    if (dto.fabricId) {
+      fabric = await this.prisma.fabric.findFirst({
+        where: { id: dto.fabricId, workshopId, deletedAt: null },
+        select: { id: true, quantity: true, unit: true },
+      });
+      if (!fabric) {
+        throw new BadRequestException("Tissu introuvable pour cet atelier");
+      }
+      if (dto.fabricQuantity) {
+        const remaining = fabric.quantity - dto.fabricQuantity;
+        if (remaining < 0) {
+          throw new BadRequestException(
+            `Tissu insuffisant : disponible ${fabric.quantity}${fabric.unit}, nécessaire ${dto.fabricQuantity}${fabric.unit}, manque ${Math.abs(remaining)}${fabric.unit}`,
+          );
+        }
+      }
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const workshop = await tx.workshop.update({
         where: { id: workshopId },
@@ -61,6 +80,8 @@ export class OrdersService {
           measurementProfileId: dto.measurementProfileId,
           modelName: dto.modelName,
           fabricDescription: dto.fabricDescription,
+          fabricId: dto.fabricId,
+          fabricQuantity: dto.fabricQuantity,
           quantity: dto.quantity,
           price: dto.price,
           deposit: dto.deposit,
@@ -75,6 +96,22 @@ export class OrdersService {
       await tx.orderStatusChange.create({
         data: { orderId: order.id, fromStatus: null, toStatus: order.status },
       });
+
+      if (fabric && dto.fabricQuantity) {
+        await tx.fabric.update({
+          where: { id: fabric.id },
+          data: { quantity: { decrement: dto.fabricQuantity } },
+        });
+        await tx.fabricMovement.create({
+          data: {
+            fabricId: fabric.id,
+            type: "OUT",
+            quantity: dto.fabricQuantity,
+            orderId: order.id,
+            note: `Consommation commande #${reference}`,
+          },
+        });
+      }
 
       return order;
     });
