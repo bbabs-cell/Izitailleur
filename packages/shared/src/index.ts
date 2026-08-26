@@ -10,3 +10,4 @@ export * from "./payment.schemas";
 export * from "./sync.schemas";
 export * from "./notification.schemas";
 export * from "./ai.schemas";
+export * from "./dashboard.schemas";

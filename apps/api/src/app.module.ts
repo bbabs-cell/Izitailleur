@@ -16,6 +16,7 @@ import { FinanceModule } from "./finance/finance.module";
 import { SyncModule } from "./sync/sync.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { AiModule } from "./ai/ai.module";
+import { DashboardModule } from "./dashboard/dashboard.module";
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { AiModule } from "./ai/ai.module";
     SyncModule,
     NotificationsModule,
     AiModule,
+    DashboardModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

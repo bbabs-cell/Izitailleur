@@ -37,3 +37,13 @@ contient des erreurs critiques non résolues.
 
 Chaque phase terminée fait l'objet d'un rapport : fonctionnalités créées, fichiers principaux,
 tests exécutés, résultats, erreurs corrigées, points restants.
+
+## Après la Phase 8 — évolutions
+
+- [x] **Tableau de bord de l'accueil** : endpoint `GET /dashboard` agrégeant les vraies données
+      de l'atelier (Aujourd'hui, Urgent, Argent, Stock, Équipe), sections Argent/Équipe masquées
+      pour les rôles non autorisés (`canViewFinance`). Écran d'accueil mobile reconstruit pour
+      consommer cet endpoint. Tests réels : 92/92 (API) + 30/30 (mobile).
+- [ ] Étendre le mode hors connexion aux commandes et aux tâches (actuellement limité à
+      Clients/Calendrier).
+- [ ] Reçus/factures plus poussés (export, personnalisation).
