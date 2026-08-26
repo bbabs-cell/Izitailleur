@@ -1,10 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { CreatePaymentDto } from "@izitailleur/shared";
 import { PrismaService } from "../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 @Injectable()
 export class PaymentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   private async computeBalance(workshopId: string, orderId: string) {
     const order = await this.prisma.order.findFirst({
@@ -68,6 +72,12 @@ export class PaymentsService {
       });
 
       return { ...payment, receipt };
+    }).then(async (result) => {
+      const { balance } = await this.computeBalance(workshopId, orderId);
+      if (balance <= 0) {
+        await this.notifications.resolve(workshopId, "DEBT", orderId);
+      }
+      return result;
     });
   }
 }

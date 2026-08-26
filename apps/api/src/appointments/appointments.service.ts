@@ -1,12 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import type { CreateAppointmentDto } from "@izitailleur/shared";
 import { PrismaService } from "../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 const BUSY_DAY_THRESHOLD = 5;
 
 @Injectable()
 export class AppointmentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async list(workshopId: string, from: Date, to: Date) {
     const [appointments, dueOrders] = await Promise.all([
@@ -58,5 +62,6 @@ export class AppointmentsService {
       where: { id, workshopId },
       data: { deletedAt: new Date() },
     });
+    await this.notifications.resolve(workshopId, "APPOINTMENT", id);
   }
 }

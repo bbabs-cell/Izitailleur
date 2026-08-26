@@ -1,12 +1,16 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { CreateFabricMovementDto, FabricDto } from "@izitailleur/shared";
 import { PrismaService } from "../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 const LOW_STOCK_THRESHOLD = 5;
 
 @Injectable()
 export class FabricsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async list(workshopId: string) {
     const fabrics = await this.prisma.fabric.findMany({
@@ -52,16 +56,31 @@ export class FabricsService {
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.fabric.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.fabric.update({
         where: { id: fabricId },
         data: { quantity: nextQuantity },
       });
       await tx.fabricMovement.create({
         data: { fabricId, type: dto.type, quantity: dto.quantity, note: dto.note },
       });
-      return updated;
+      return result;
     });
+
+    if (updated.quantity <= LOW_STOCK_THRESHOLD) {
+      await this.notifications.upsert(
+        workshopId,
+        "STOCK",
+        "fabric",
+        fabricId,
+        `Stock faible : ${updated.name}`,
+        `Il ne reste que ${updated.quantity}${updated.unit} de ${updated.name}.`,
+      );
+    } else {
+      await this.notifications.resolve(workshopId, "STOCK", fabricId);
+    }
+
+    return updated;
   }
 
   async lowStock(workshopId: string) {

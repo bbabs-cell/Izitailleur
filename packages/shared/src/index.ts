@@ -8,3 +8,4 @@ export * from "./issue.schemas";
 export * from "./employee.schemas";
 export * from "./payment.schemas";
 export * from "./sync.schemas";
+export * from "./notification.schemas";

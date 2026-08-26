@@ -29,15 +29,16 @@ model Workshop {
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
 
-  users        User[]
-  customers    Customer[]
-  orders       Order[]
-  appointments Appointment[]
-  suppliers    Supplier[]
-  fabrics      Fabric[]
-  issues       WorkshopIssue[]
-  payments     Payment[]
-  receipts     Receipt[]
+  users         User[]
+  customers     Customer[]
+  orders        Order[]
+  appointments  Appointment[]
+  suppliers     Supplier[]
+  fabrics       Fabric[]
+  issues        WorkshopIssue[]
+  payments      Payment[]
+  receipts      Receipt[]
+  notifications Notification[]
 }
 
 model User {
@@ -395,4 +396,31 @@ model Receipt {
 
   @@unique([workshopId, number])
   @@index([workshopId])
+}
+
+enum NotificationType {
+  APPOINTMENT
+  DELIVERY
+  URGENT_ORDER
+  DELAY
+  DEBT
+  STOCK
+  TASK
+  ISSUE
+}
+
+model Notification {
+  id              String           @id @default(uuid())
+  workshopId      String
+  workshop        Workshop         @relation(fields: [workshopId], references: [id])
+  type            NotificationType
+  title           String
+  body            String
+  relatedEntity   String?
+  relatedEntityId String?
+  read            Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+
+  @@unique([workshopId, type, relatedEntityId])
+  @@index([workshopId, read])
 }

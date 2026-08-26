@@ -27,7 +27,7 @@ const SYNC_TONE: Record<string, "success" | "warning" | "danger" | "info"> = {
 
 export function HomeScreen({ navigation }: Props) {
   const { user, logout } = useAuth();
-  const { status: syncStatus, pendingCount } = useSync();
+  const { status: syncStatus, pendingCount, unreadNotifications } = useSync();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -40,6 +40,14 @@ export function HomeScreen({ navigation }: Props) {
           Le tableau de bord complet (urgences, priorités du jour) arrive en Phase 8. En
           attendant, gérez votre atelier ci-dessous.
         </Text>
+      </Card>
+
+      <Card style={styles.card}>
+        <Badge
+          label={unreadNotifications > 0 ? `${unreadNotifications} notification(s)` : "Aucune alerte"}
+          tone={unreadNotifications > 0 ? "danger" : "success"}
+        />
+        <Button label="Notifications" variant="secondary" onPress={() => navigation.navigate("Notifications")} />
       </Card>
 
       <Card style={styles.card}>

@@ -3,10 +3,12 @@ import { AppState } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
 import { syncNow, type SyncStatus, type SyncSummary } from "./syncEngine";
 import { queueLength } from "./mutationQueue";
+import { notificationsApi } from "../api/notifications";
 
 interface SyncContextValue {
   status: SyncStatus;
   pendingCount: number;
+  unreadNotifications: number;
   lastSummary: SyncSummary | null;
   lastError: string | null;
   syncNow: () => Promise<void>;
@@ -17,12 +19,22 @@ const SyncContext = createContext<SyncContextValue | undefined>(undefined);
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<SyncStatus>("idle");
   const [pendingCount, setPendingCount] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
   const runningRef = useRef(false);
 
   const refreshPendingCount = useCallback(async () => {
     setPendingCount(await queueLength());
+  }, []);
+
+  const refreshNotifications = useCallback(async () => {
+    try {
+      const notifications = await notificationsApi.scan();
+      setUnreadNotifications(notifications.filter((n) => !n.read).length);
+    } catch {
+      // Hors connexion : le compteur reste tel quel, aucune alerte bloquante.
+    }
   }, []);
 
   const triggerSync = useCallback(async () => {
@@ -34,6 +46,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       const summary = await syncNow();
       setLastSummary(summary);
       setStatus("idle");
+      await refreshNotifications();
     } catch (e) {
       if (e instanceof Error && e.message === "offline") {
         setStatus("offline");
@@ -45,7 +58,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       runningRef.current = false;
       await refreshPendingCount();
     }
-  }, [refreshPendingCount]);
+  }, [refreshPendingCount, refreshNotifications]);
 
   useEffect(() => {
     refreshPendingCount();
@@ -72,7 +85,14 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const value: SyncContextValue = { status, pendingCount, lastSummary, lastError, syncNow: triggerSync };
+  const value: SyncContextValue = {
+    status,
+    pendingCount,
+    unreadNotifications,
+    lastSummary,
+    lastError,
+    syncNow: triggerSync,
+  };
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
 }
 

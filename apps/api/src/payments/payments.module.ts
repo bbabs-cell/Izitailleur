@@ -5,9 +5,10 @@ import { ReceiptsController } from "./receipts.controller";
 import { ReceiptsService } from "./receipts.service";
 import { AuthModule } from "../auth/auth.module";
 import { RolesGuard } from "../common/guards/roles.guard";
+import { NotificationsModule } from "../notifications/notifications.module";
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, NotificationsModule],
   controllers: [PaymentsController, ReceiptsController],
   providers: [PaymentsService, ReceiptsService, RolesGuard],
 })

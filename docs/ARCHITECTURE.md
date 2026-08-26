@@ -105,3 +105,44 @@ ultérieure. Aucune fonctionnalité offline non listée ici n'est présentée co
   réseau complet (`syncEngine.ts`, `SyncContext.tsx`) n'a **pas** pu être exercé par un test
   automatisé dans cet environnement (pas d'émulateur/appareil disponible) — il doit être vérifié
   manuellement avant mise en production réelle.
+
+## Notifications (Phase 6)
+
+### Mécanisme
+
+- **Alertes calculées côté serveur**, jamais inventées : `NotificationsService.scan(workshopId)`
+  relit les données réelles (rendez-vous proches, commandes en retard/urgentes/dues demain,
+  dettes, stock faible, tâches en retard, problèmes urgents) et crée/supprime des notifications
+  en conséquence. Une notification est unique par `(atelier, type, entité liée)` : jamais de
+  doublon, et elle disparaît automatiquement quand la condition qui l'a déclenchée est résolue
+  (commande livrée, dette payée, tissu réapprovisionné, tâche terminée, problème résolu).
+- La plupart des mutations (création de commande, paiement, mouvement de stock, résolution de
+  problème...) déclenchent directement la mise à jour des notifications concernées.
+- Les vérifications qui dépendent uniquement du temps qui passe (« rendez-vous dans 2h »,
+  commande qui devient en retard) ne peuvent pas être déclenchées par une mutation : elles sont
+  recalculées via `POST /notifications/scan`, appelé par le mobile à chaque synchronisation et à
+  l'ouverture de l'écran Notifications.
+- **Rappels locaux sur l'appareil** (`expo-notifications`) : à la création d'un rendez-vous, un
+  rappel est programmé nativement sur le téléphone (2h avant par défaut), sans dépendre d'un
+  serveur de push — fonctionne même hors connexion.
+
+### Limite assumée et documentée
+
+**Aucun push distant (remote push / FCM / APNs) n'est câblé.** Depuis le SDK 53 d'Expo, les
+notifications push distantes ne fonctionnent plus dans Expo Go et nécessitent un build de
+développement dédié (confirmé par un avertissement d'`expo-notifications` observé pendant les
+tests). Tant que l'app tourne sous Expo Go dans cet environnement, seules les notifications
+**locales** (programmées sur l'appareil) et les alertes **in-app** (récupérées au moment de la
+synchronisation) sont réellement fonctionnelles. Le passage à un vrai push distant est un
+changement d'infrastructure (build EAS, projet Expo Push) à valider séparément avant
+implémentation, conformément à la règle de décision du projet.
+
+### Ce qui est réellement testé
+
+- API : 7 tests e2e contre PostgreSQL réel (`apps/api/test/notifications.e2e-spec.ts`) —
+  génération sans doublon, résolution automatique (stock réapprovisionné, dette payée), alerte
+  de retard/dette, marquage lu, filtrage non-lues.
+- Mobile : la fonction pure de calcul de l'heure de rappel local (`computeReminderTriggerDate`)
+  est testée unitairement, y compris les cas limites (rendez-vous déjà passé, trop proche pour
+  laisser un délai). L'appel réel à l'API de notifications native de l'appareil n'est pas testé
+  automatiquement (nécessite un appareil/émulateur).

@@ -3,6 +3,7 @@ import type { CreateAppointmentDto } from "@izitailleur/shared";
 import { getDb } from "./db";
 import { enqueueMutation } from "./mutationQueue";
 import type { AppointmentType } from "@izitailleur/shared";
+import { scheduleAppointmentReminder } from "../notifications/localNotifications";
 
 export interface LocalAppointment {
   id: string;
@@ -58,6 +59,10 @@ export const appointmentsRepo = {
       data: JSON.stringify(data),
       createdAt: now,
     });
+
+    // Rappel local sur l'appareil (best-effort) : fonctionne même hors connexion, sans
+    // dépendre d'un serveur de push. Échec silencieux si la permission est refusée.
+    scheduleAppointmentReminder(id, data.title, data.startAt).catch(() => undefined);
 
     return {
       id,

@@ -7,10 +7,14 @@ import type {
   CreateOrderTaskDto,
 } from "@izitailleur/shared";
 import { PrismaService } from "../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   list(workshopId: string, status?: OrderStatus) {
     return this.prisma.order.findMany({
@@ -114,6 +118,9 @@ export class OrdersService {
       }
 
       return order;
+    }).then(async (order) => {
+      await this.notifications.scan(workshopId);
+      return order;
     });
   }
 
@@ -125,8 +132,8 @@ export class OrdersService {
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.order.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedOrder = await tx.order.update({
         where: { id },
         data: {
           status: toStatus,
@@ -136,8 +143,16 @@ export class OrdersService {
       await tx.orderStatusChange.create({
         data: { orderId: id, fromStatus: order.status, toStatus },
       });
-      return updated;
+      return updatedOrder;
     });
+
+    if (toStatus === "DELIVERED" || toStatus === "CANCELLED") {
+      await this.notifications.resolve(workshopId, "DELAY", id);
+      await this.notifications.resolve(workshopId, "DELIVERY", id);
+      await this.notifications.resolve(workshopId, "URGENT_ORDER", id);
+    }
+    await this.notifications.scan(workshopId);
+    return updated;
   }
 
   async addImage(workshopId: string, orderId: string, dto: CreateOrderImageDto) {
@@ -164,6 +179,10 @@ export class OrdersService {
     if (!task) {
       throw new NotFoundException("Tâche introuvable");
     }
-    return this.prisma.orderTask.update({ where: { id: taskId }, data: { status } });
+    const updated = await this.prisma.orderTask.update({ where: { id: taskId }, data: { status } });
+    if (status === "DONE") {
+      await this.notifications.resolve(workshopId, "TASK", taskId);
+    }
+    return updated;
   }
 }
