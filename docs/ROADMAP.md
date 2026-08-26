@@ -26,7 +26,9 @@ contient des erreurs critiques non résolues.
       dettes, stock faible, tâches, problèmes urgents), résolution automatique, rappels locaux
       sur l'appareil. Push distant non câblé (limite documentée). Tests réels : 70/70 (API) +
       30/30 (mobile).
-- [ ] **PHASE 7 — IA** : AIService, contexte sécurisé, premières commandes IA.
+- [x] **PHASE 7 — IA** : AIService déterministe (décision validée : pas d'appel externe),
+      répond aux 6 questions du cahier des charges à partir de données réelles, permissions
+      respectées. Tests réels : 81/81 (API).
 - [ ] **PHASE 8 — Qualité** : tests, optimisation, sécurité, accessibilité, UX, responsive,
       nettoyage du code.
 
