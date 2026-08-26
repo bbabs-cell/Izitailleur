@@ -23,6 +23,26 @@ export class PaymentsService {
     return { order, totalPaid, balance };
   }
 
+  async getInvoiceData(workshopId: string, orderId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, workshopId, deletedAt: null },
+      include: {
+        customer: { select: { firstName: true, lastName: true, phone: true, address: true } },
+        payments: {
+          include: { recordedBy: { select: { fullName: true } } },
+          orderBy: { createdAt: "asc" },
+        },
+        workshop: { select: { name: true, phone: true, address: true, receiptFooterMessage: true } },
+      },
+    });
+    if (!order) {
+      throw new NotFoundException("Commande introuvable");
+    }
+    const totalPaid = order.deposit + order.payments.reduce((sum, p) => sum + p.amount, 0);
+    const balance = order.price - totalPaid;
+    return { order, totalPaid, balance };
+  }
+
   async list(workshopId: string, orderId: string) {
     const { order, totalPaid, balance } = await this.computeBalance(workshopId, orderId);
     const payments = await this.prisma.payment.findMany({

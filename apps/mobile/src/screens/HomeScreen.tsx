@@ -207,6 +207,14 @@ export function HomeScreen({ navigation }: Props) {
         </>
       ) : null}
 
+      {user && (user.role === "OWNER" || user.role === "ADMIN") ? (
+        <Button
+          label="Paramètres de l'atelier"
+          variant="secondary"
+          onPress={() => navigation.navigate("WorkshopSettings")}
+        />
+      ) : null}
+
       <Button label="Équipe" variant="secondary" onPress={() => navigation.navigate("Team")} />
       <Button label="Tissus" variant="secondary" onPress={() => navigation.navigate("Fabrics")} />
       <Button label="Fournisseurs" variant="secondary" onPress={() => navigation.navigate("Suppliers")} />

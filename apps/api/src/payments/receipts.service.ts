@@ -9,7 +9,7 @@ export class ReceiptsService {
     const receipt = await this.prisma.receipt.findFirst({
       where: { id, workshopId },
       include: {
-        workshop: { select: { name: true, phone: true, address: true } },
+        workshop: { select: { name: true, phone: true, address: true, receiptFooterMessage: true } },
         order: { select: { reference: true, modelName: true, customer: true } },
       },
     });

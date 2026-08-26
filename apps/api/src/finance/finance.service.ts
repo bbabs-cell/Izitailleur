@@ -74,4 +74,40 @@ export class FinanceService {
       openIssues,
     };
   }
+
+  /** Export réel des paiements enregistrés (CSV), pour la comptabilité de l'atelier. */
+  async exportPaymentsCsv(workshopId: string, from?: Date, to?: Date): Promise<string> {
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        workshopId,
+        ...(from || to
+          ? { createdAt: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } }
+          : {}),
+      },
+      include: {
+        order: { select: { reference: true, customer: { select: { firstName: true, lastName: true } } } },
+        recordedBy: { select: { fullName: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const header = ["Date", "Commande", "Client", "Montant (FCFA)", "Mode", "Enregistré par"];
+    const rows = payments.map((p) => [
+      p.createdAt.toISOString(),
+      p.order.reference,
+      `${p.order.customer.firstName} ${p.order.customer.lastName}`,
+      String(p.amount),
+      p.method,
+      p.recordedBy?.fullName ?? "",
+    ]);
+
+    return [header, ...rows].map((row) => row.map(csvEscape).join(",")).join("\r\n") + "\r\n";
+  }
+}
+
+function csvEscape(value: string): string {
+  if (/[",\r\n]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
 }

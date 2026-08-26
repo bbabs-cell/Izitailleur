@@ -33,7 +33,7 @@ export class ReceiptsController {
     const receipt = await this.receiptsService.getOrThrow(user.workshopId, id);
     res.setHeader("Content-Disposition", `inline; filename="recu-${receipt.number}.pdf"`);
 
-    const doc = new PDFDocument({ size: "A5", margin: 40 });
+    const doc = new PDFDocument({ size: "A5", margin: 40, compress: false });
     doc.pipe(res);
 
     doc.fontSize(18).text(receipt.workshop.name, { align: "center" });
@@ -60,7 +60,10 @@ export class ReceiptsController {
     });
 
     doc.moveDown(2);
-    doc.fontSize(9).fillColor("#555555").text("Merci de votre confiance.", { align: "center" });
+    doc
+      .fontSize(9)
+      .fillColor("#555555")
+      .text(receipt.workshop.receiptFooterMessage || "Merci de votre confiance.", { align: "center" });
 
     doc.end();
   }

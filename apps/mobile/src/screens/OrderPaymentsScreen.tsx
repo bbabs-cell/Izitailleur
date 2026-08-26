@@ -8,6 +8,8 @@ import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { paymentsApi, type OrderPayments } from "../api/payments";
 import { receiptsApi } from "../api/receipts";
+import { invoiceApi } from "../api/invoice";
+import { ordersRepo } from "../offline/ordersRepo";
 import { ApiError } from "../api/client";
 import { PAYMENT_METHOD_LABELS, formatFcfa } from "../domain/payments";
 import { colors, spacing, typography } from "../theme/tokens";
@@ -23,6 +25,7 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sharingId, setSharingId] = useState<string | null>(null);
+  const [sharingInvoice, setSharingInvoice] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -68,6 +71,19 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
     }
   }
 
+  async function shareInvoice() {
+    setSharingInvoice(true);
+    setError(null);
+    try {
+      const localOrder = await ordersRepo.get(orderId);
+      await invoiceApi.downloadAndShare(orderId, localOrder?.reference ?? orderId);
+    } catch {
+      setError("Impossible de générer ou partager la facture.");
+    } finally {
+      setSharingInvoice(false);
+    }
+  }
+
   if (!data) {
     return (
       <View style={styles.container}>
@@ -85,6 +101,13 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
           {data.balance > 0 ? `Solde restant : ${formatFcfa(data.balance)}` : "Payée intégralement"}
         </Text>
       </Card>
+
+      <Button
+        label={sharingInvoice ? "Génération…" : "🧾 Facture complète de la commande"}
+        variant="secondary"
+        onPress={shareInvoice}
+        loading={sharingInvoice}
+      />
 
       {data.balance > 0 ? (
         <Card style={styles.form}>

@@ -3,13 +3,14 @@ import { PaymentsController } from "./payments.controller";
 import { PaymentsService } from "./payments.service";
 import { ReceiptsController } from "./receipts.controller";
 import { ReceiptsService } from "./receipts.service";
+import { InvoiceController } from "./invoice.controller";
 import { AuthModule } from "../auth/auth.module";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { NotificationsModule } from "../notifications/notifications.module";
 
 @Module({
   imports: [AuthModule, NotificationsModule],
-  controllers: [PaymentsController, ReceiptsController],
+  controllers: [PaymentsController, ReceiptsController, InvoiceController],
   providers: [PaymentsService, ReceiptsService, RolesGuard],
 })
 export class PaymentsModule {}

@@ -28,6 +28,7 @@ import { FinanceStatsScreen } from "../screens/FinanceStatsScreen";
 import { SyncStatusScreen } from "../screens/SyncStatusScreen";
 import { NotificationsScreen } from "../screens/NotificationsScreen";
 import { AssistantScreen } from "../screens/AssistantScreen";
+import { WorkshopSettingsScreen } from "../screens/WorkshopSettingsScreen";
 import { SyncProvider } from "../offline/SyncContext";
 import { colors } from "../theme/tokens";
 
@@ -61,6 +62,7 @@ export type AppStackParamList = {
   SyncStatus: undefined;
   Notifications: undefined;
   Assistant: undefined;
+  WorkshopSettings: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -181,6 +183,11 @@ export function RootNavigator() {
             name="Assistant"
             component={AssistantScreen}
             options={{ title: "Assistant" }}
+          />
+          <AppStack.Screen
+            name="WorkshopSettings"
+            component={WorkshopSettingsScreen}
+            options={{ title: "Paramètres de l'atelier" }}
           />
         </AppStack.Navigator>
         </SyncProvider>

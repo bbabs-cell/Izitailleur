@@ -19,15 +19,16 @@ enum Role {
 }
 
 model Workshop {
-  id              String    @id @default(uuid())
-  name            String
-  phone           String?
-  address         String?
-  orderSequence   Int       @default(0)
-  receiptSequence Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
+  id                    String    @id @default(uuid())
+  name                  String
+  phone                 String?
+  address               String?
+  receiptFooterMessage  String?
+  orderSequence         Int       @default(0)
+  receiptSequence       Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
 
   users         User[]
   customers     Customer[]

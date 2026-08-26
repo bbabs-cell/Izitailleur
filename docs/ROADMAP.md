@@ -49,4 +49,9 @@ tests exécutés, résultats, erreurs corrigées, points restants.
       commande et de tâche hors connexion, conflits détectés et résolubles depuis l'écran
       Synchronisation. Tests réels : 17/17 (sync e2e, API) + suite complète 100/100 (API),
       typecheck mobile propre.
-- [ ] Reçus/factures plus poussés (export, personnalisation).
+- [x] **Reçus/factures plus poussés** : facture PDF complète par commande (récapitulatif prix,
+      acompte, historique des paiements, solde), export CSV réel des paiements (filtrable par
+      date) pour la comptabilité, message de pied de page personnalisable par atelier
+      (`GET/PATCH /workshop`, réservé OWNER/ADMIN) repris sur les reçus et les factures. Tests
+      réels : 17/17 (payments/finance e2e, incluant contenu réel du PDF décodé). Suite API
+      complète 107/107 (deux exécutions consécutives, idempotent).

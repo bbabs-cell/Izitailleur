@@ -17,6 +17,7 @@ import { SyncModule } from "./sync/sync.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { AiModule } from "./ai/ai.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
+import { WorkshopModule } from "./workshop/workshop.module";
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { DashboardModule } from "./dashboard/dashboard.module";
     NotificationsModule,
     AiModule,
     DashboardModule,
+    WorkshopModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
