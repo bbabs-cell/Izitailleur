@@ -20,12 +20,15 @@ Prérequis : Node.js 20+, pnpm, PostgreSQL.
 
 ```bash
 pnpm install
+pnpm build:shared   # compile packages/shared — requis avant toute exécution réelle (pas
+                     # seulement les tests, qui transpilent la source TS à la volée)
 
 # API
 cp apps/api/.env.example apps/api/.env   # ajuster DATABASE_URL et secrets JWT
 pnpm --filter @izitailleur/api prisma:migrate
 pnpm --filter @izitailleur/api seed        # données de démo (dev uniquement)
-pnpm api:dev
+pnpm api:dev                                # rebuild packages/shared puis démarre en watch
+# ou, pour un run "production" : pnpm api:start
 
 # Mobile
 pnpm mobile:start

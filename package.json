@@ -6,9 +6,12 @@
     "node": ">=20"
   },
   "scripts": {
-    "api:dev": "pnpm --filter @izitailleur/api start:dev",
-    "api:test": "pnpm --filter @izitailleur/api test",
-    "mobile:start": "pnpm --filter @izitailleur/mobile start",
+    "build:shared": "pnpm --filter @izitailleur/shared build",
+    "api:dev": "pnpm build:shared && pnpm --filter @izitailleur/api start:dev",
+    "api:build": "pnpm build:shared && pnpm --filter @izitailleur/api build",
+    "api:start": "pnpm build:shared && pnpm --filter @izitailleur/api build && node apps/api/dist/src/main.js",
+    "api:test": "pnpm build:shared && pnpm --filter @izitailleur/api test",
+    "mobile:start": "pnpm build:shared && pnpm --filter @izitailleur/mobile start",
     "lint": "pnpm -r lint"
   }
 }
