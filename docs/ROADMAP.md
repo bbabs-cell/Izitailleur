@@ -12,7 +12,9 @@ contient des erreurs critiques non résolues.
 - [x] **PHASE 2 — Cœur métier** : clients, mensurations (historisées), commandes (référence
       auto-incrémentée, machine à états de statut), tâches, photos, calendrier (avec détection
       de journée chargée). Tests réels : 25/25 (API) + 12/12 (mobile).
-- [ ] **PHASE 3 — Atelier** : apprentis, équipes, tissus, stocks, fournisseurs, problèmes.
+- [x] **PHASE 3 — Atelier** : équipe/apprentis (invitation, rôles, RBAC réel), tissus/stock
+      (mouvements, alerte stock faible, consommation atomique liée aux commandes), fournisseurs,
+      problèmes d'atelier. Tests réels : 44/44 (API) + 15/15 (mobile).
 - [ ] **PHASE 4 — Finances** : paiements, dettes, reçus, statistiques financières.
 - [ ] **PHASE 5 — Offline** : stockage local, synchronisation, gestion des conflits.
 - [ ] **PHASE 6 — Notifications** : rappels, alertes, notifications.
