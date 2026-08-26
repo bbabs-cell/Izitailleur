@@ -22,7 +22,10 @@ contient des erreurs critiques non résolues.
       de conflits réelle et testée — scope actuel : Clients et Calendrier (voir
       docs/ARCHITECTURE.md pour le détail honnête de la portée). Tests réels : 63/63 (API,
       dont un scénario de conflit à deux appareils) + 26/26 (mobile, logique pure).
-- [ ] **PHASE 6 — Notifications** : rappels, alertes, notifications.
+- [x] **PHASE 6 — Notifications** : alertes calculées sur données réelles (rendez-vous, retards,
+      dettes, stock faible, tâches, problèmes urgents), résolution automatique, rappels locaux
+      sur l'appareil. Push distant non câblé (limite documentée). Tests réels : 70/70 (API) +
+      30/30 (mobile).
 - [ ] **PHASE 7 — IA** : AIService, contexte sécurisé, premières commandes IA.
 - [ ] **PHASE 8 — Qualité** : tests, optimisation, sécurité, accessibilité, UX, responsive,
       nettoyage du code.
