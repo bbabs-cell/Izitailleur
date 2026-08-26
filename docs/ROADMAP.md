@@ -9,7 +9,9 @@ contient des erreurs critiques non résolues.
 - [x] **PHASE 1 — Fondation** : monorepo pnpm, API NestJS (auth JWT + RBAC, Prisma/PostgreSQL),
       app mobile Expo (navigation, design system, écrans Connexion/Inscription/Accueil).
       Tests réels : 8/8 (API) + 5/5 (mobile).
-- [ ] **PHASE 2 — Cœur métier** : clients, mensurations, commandes, photos, tâches, calendrier.
+- [x] **PHASE 2 — Cœur métier** : clients, mensurations (historisées), commandes (référence
+      auto-incrémentée, machine à états de statut), tâches, photos, calendrier (avec détection
+      de journée chargée). Tests réels : 25/25 (API) + 12/12 (mobile).
 - [ ] **PHASE 3 — Atelier** : apprentis, équipes, tissus, stocks, fournisseurs, problèmes.
 - [ ] **PHASE 4 — Finances** : paiements, dettes, reçus, statistiques financières.
 - [ ] **PHASE 5 — Offline** : stockage local, synchronisation, gestion des conflits.
