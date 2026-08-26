@@ -5,12 +5,12 @@ photos, avec l'infrastructure validée (voir ARCHITECTURE.md) : **Vercel** (API)
 (PostgreSQL, via l'intégration Vercel Postgres), **Cloudflare R2** (photos), **Upstash Redis**
 (anti-brute-force partagé).
 
-**État réel au moment de la rédaction** : tout le code ci-dessous est écrit, testé et poussé sur
-le dépôt. Aucun compte cloud réel n'a été créé pour ce projet — les étapes qui suivent créent de
-vraies ressources et doivent être exécutées par une personne ayant accès à une carte de paiement
-et aux comptes de l'atelier (Vercel, Cloudflare, Upstash). Rien de tout cela n'a donc pu être
-vérifié en conditions de production réelles ; seul le code a été testé localement (voir le detail
-« Vérifié / Non vérifié » à la fin de chaque section).
+**État réel (mis à jour après la mise en production réelle du 26/08/2026)** : l'API tourne
+réellement sur Vercel, connectée à une vraie base Neon et à un vrai Redis Upstash — inscription,
+connexion, tableau de bord et anti-brute-force ont été testés directement contre les URLs de
+production (pas de simulation). Seul le stockage des photos (Cloudflare R2) reste à configurer.
+Voir le detail « Vérifié / Non vérifié » à la fin de chaque section pour ce qui reste réellement
+à faire.
 
 ## 1. Base de données — Vercel Postgres (Neon)
 
@@ -19,7 +19,9 @@ vérifié en conditions de production réelles ; seul le code a été testé loc
 2. Une fois créée, Vercel propose deux chaînes de connexion. **Utiliser impérativement la chaîne
    poolée** (celle qui contient `-pooler` dans le nom d'hôte) comme `DATABASE_URL` — sans ça, un
    pic de trafic sur les fonctions serverless peut épuiser les connexions Postgres disponibles.
-3. Appliquer les migrations Prisma contre cette base :
+3. Appliquer les migrations Prisma contre cette base, depuis une machine ayant un accès réseau
+   direct (pas depuis une session Claude — ces sessions n'ont accès qu'à HTTPS via un proxy, pas
+   au protocole PostgreSQL brut) :
    ```
    DATABASE_URL="<chaîne pooler>" pnpm --filter @izitailleur/api exec prisma migrate deploy
    ```
@@ -27,9 +29,9 @@ vérifié en conditions de production réelles ; seul le code a été testé loc
    supplémentaire (décision validée — voir ARCHITECTURE.md). Vérifier dans le tableau de bord
    Neon que la rétention proposée par le plan choisi correspond au besoin réel de l'atelier.
 
-**Vérifié** : les migrations Prisma s'appliquent proprement sur PostgreSQL (testé en local,
-mécanisme identique quel que soit l'hôte Postgres). **Non vérifié** : le comportement réel contre
-une base Neon (latence réseau, pooling réel) — aucun compte Neon réel disponible pour ce test.
+**Vérifié réellement en production** : les 6 migrations Prisma ont été appliquées avec succès
+contre la base Neon réelle du projet (`neondb`, région Frankfurt) via la chaîne poolée. La base a
+ensuite servi une vraie inscription d'atelier et un vrai appel `/dashboard` authentifié.
 
 ## 2. API — Vercel
 
@@ -45,13 +47,17 @@ une base Neon (latence réseau, pooling réel) — aucun compte Neon réel dispo
    distinctes du développement local.
 4. Déployer. L'API répond alors sur `https://<projet>.vercel.app`.
 
-**Vérifié réellement (pas de simulation)** : le point d'entrée serverless
-(`apps/api/api/index.ts`) a été testé en local en le pilotant avec de vrais objets HTTP Node
-(pas des mocks) devant un vrai serveur PostgreSQL — inscription d'un atelier puis appel
-authentifié à `/dashboard`, réponses 401/201/200 correctes. Ce test reproduit fidèlement le
-contrat que Vercel utilise pour ses fonctions Node (`(req, res)` avec de vrais objets HTTP), donc
-il donne une garantie réelle sur le code, mais **pas** sur l'infrastructure Vercel elle-même
-(cold starts réels, limites de durée, comportement réseau) — non testable sans compte réel.
+**Vérifié réellement en production** : l'API tourne sur Vercel (`https://api-puce-omega-36.vercel.app`
+au moment du déploiement initial). Inscription réelle d'un atelier, connexion, et appel
+authentifié à `/dashboard` testés directement contre cette URL — réponses 201/200 correctes avec
+de vraies données issues de Neon.
+
+**Piège rencontré et corrigé pendant la mise en place** : Vercel détecte automatiquement un
+préréglage "Framework" (ex : NestJS) qui ignore `vercel.json` et utilise son propre système de
+build — désactiver ce préréglage (`Settings → Build and Deployment → Framework Preset → Other`)
+est nécessaire. Par ailleurs, un projet purement serverless (sans site statique) doit tout de
+même fournir un dossier de sortie non vide (`apps/api/public/`, déjà présent dans le dépôt) sans
+quoi Vercel échoue avec *"No Output Directory named 'public' found"*.
 
 ## 3. Anti-brute-force partagé — Upstash Redis
 
@@ -64,10 +70,12 @@ Sans cette variable, l'application démarre quand même (comportement de repli d
 `app.module.ts`), mais la protection anti-brute-force ne serait plus réellement effective sur un
 hébergement serverless — ne pas déployer en production sans cette variable.
 
-**Vérifié réellement** : avec un vrai serveur Redis local, deux instances applicatives Nest
-distinctes partagent bien le même compteur de requêtes (`apps/api/test/throttle.e2e-spec.ts`,
-exécuté avec `REDIS_URL` pointant vers un Redis réel). **Non vérifié** : Upstash spécifiquement
-(protocole compatible Redis standard, donc attendu identique, mais pas testé contre leur service).
+**Vérifié réellement en production** : avec un vrai serveur Redis local, deux instances
+applicatives Nest distinctes partagent bien le même compteur de requêtes
+(`apps/api/test/throttle.e2e-spec.ts`, exécuté avec `REDIS_URL` pointant vers un Redis réel). Une
+fois `REDIS_URL` (Upstash, région Frankfurt) renseigné sur Vercel et redéployé, 12 tentatives de
+connexion successives contre l'API réelle ont donné 401 (identifiants invalides) dix fois puis
+429 (limite atteinte) — la protection anti-brute-force est bien active en production.
 
 ## 4. Stockage des photos — Cloudflare R2
 
