@@ -1,0 +1,14 @@
+{
+  "name": "izitailleur",
+  "private": true,
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "api:dev": "pnpm --filter @izitailleur/api start:dev",
+    "api:test": "pnpm --filter @izitailleur/api test",
+    "mobile:start": "pnpm --filter @izitailleur/mobile start",
+    "lint": "pnpm -r lint"
+  }
+}

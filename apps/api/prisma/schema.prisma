@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  TAILOR
+  CUTTER
+  APPRENTICE
+  FINISHER
+  DELIVERY
+}
+
+model Workshop {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  users User[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  workshopId   String
+  workshop     Workshop @relation(fields: [workshopId], references: [id])
+  fullName     String
+  phone        String   @unique
+  passwordHash String
+  role         Role
+  refreshTokenHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  @@index([workshopId])
+}
