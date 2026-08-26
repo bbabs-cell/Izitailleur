@@ -49,6 +49,11 @@ export class OrdersController {
     return this.ordersService.updateStatus(user.workshopId, id, dto.status);
   }
 
+  @Get(":id/images")
+  listImages(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string) {
+    return this.ordersService.listImages(user.workshopId, id);
+  }
+
   @Post(":id/images")
   addImage(
     @CurrentUser() user: AuthenticatedUser,

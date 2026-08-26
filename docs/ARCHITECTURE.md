@@ -50,16 +50,41 @@ Chaque entité critique porte `createdAt`, `updatedAt`, `deletedAt` (suppression
 - Validation des entrées à la frontière API (Zod/DTO NestJS).
 - Journalisation des actions sensibles (suppression, paiement, changement de rôle).
 
-## Ce qui n'est PAS encore décidé (à valider avec le propriétaire du produit)
+## Infrastructure de production (décidé — voir docs/DEPLOYMENT.md)
 
-- Hébergement du backend et de la base de données (coût, fournisseur).
-- Stratégie de stockage des photos (S3-compatible ? local + CDN ?).
-- Fournisseur de notifications push.
+Validé avec le propriétaire du produit :
+
+| Décision | Choix |
+|---|---|
+| Hébergement backend | Vercel (fonctions serverless Node) |
+| Base de données | Vercel Postgres (Neon) — connexion poolée obligatoire (suffixe `-pooler`) |
+| Sauvegardes | Snapshots automatiques quotidiens du fournisseur (Neon) |
+| Stockage des photos | Cloudflare R2 (compatible S3), URLs de téléversement pré-signées |
+| Secrets | Variables d'environnement de la plateforme (tableau de bord Vercel) |
+| Anti-brute-force en environnement serverless | Compteurs partagés via Redis (Upstash) — voir ci-dessous |
+
+**Point technique tranché avec ce choix** : sur un hébergement serverless, chaque invocation
+peut démarrer une instance sans mémoire partagée avec la précédente. Le limiteur
+`@nestjs/throttler`, qui comptait par défaut en mémoire locale, ne protégerait donc plus
+réellement contre le brute-force une fois déployé sur Vercel (chaque instance repartirait de
+zéro). `ThrottlerModule` utilise maintenant un stockage Redis (`@nest-lab/throttler-storage-redis`)
+dès que la variable `REDIS_URL` est définie ; sans elle (développement local, tests), le
+comportement précédent (mémoire locale) est conservé à l'identique. Vérifié avec un vrai Redis
+local : deux instances applicatives distinctes partagent bien le même compteur
+(`apps/api/test/throttle.e2e-spec.ts`).
+
+Le point d'entrée serverless (`apps/api/api/index.ts`) a été testé de bout en bout (inscription
+réelle puis appel authentifié au tableau de bord, contre PostgreSQL réel) avant d'être committé —
+voir le rapport de la session correspondante. Ce qui n'a **pas** pu être testé faute de comptes
+réels : le comportement en production sur l'infrastructure Vercel/Neon/R2/Upstash elle-même
+(latence réseau réelle, comportement à froid réel, upload réel vers R2). La présignature R2
+(calcul cryptographique local, sans réseau) est testée réellement ; l'upload final vers un vrai
+bucket R2 ne l'est pas.
+
+- Fournisseur de notifications push : **toujours non tranché** — hors périmètre de cette
+  discussion (les rappels actuels sont locaux à l'appareil, voir PHASE 6).
 - ~~Portée exacte de l'intégration IA (PHASE 7)~~ — tranché : voir section IA ci-dessous.
   Aucun appel à un service IA externe n'a été câblé.
-
-Ces points seront soumis à validation avant d'être implémentés, conformément à la règle de
-décision du projet (changements profonds = validation requise).
 
 ## Mode hors connexion et synchronisation (Phase 5)
 

@@ -75,3 +75,14 @@ export const createOrderImageSchema = z.object({
   url: z.string().url(),
 });
 export type CreateOrderImageDto = z.infer<typeof createOrderImageSchema>;
+
+export const IMAGE_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const presignOrderImageSchema = z.object({
+  contentType: z.enum(IMAGE_CONTENT_TYPES),
+});
+export type PresignOrderImageDto = z.infer<typeof presignOrderImageSchema>;
+
+export interface PresignedUpload {
+  uploadUrl: string;
+  publicUrl: string;
+}

@@ -21,6 +21,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Izitailleur a besoin d'accéder à vos photos pour illustrer les commandes.",
+          "cameraPermission": "Izitailleur a besoin d'accéder à l'appareil photo pour photographier les commandes."
+        }
+      ]
+    ]
   }
 }

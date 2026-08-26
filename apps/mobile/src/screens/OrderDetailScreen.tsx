@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system/legacy";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   canTransitionOrderStatus,
@@ -14,6 +16,8 @@ import { Button } from "../components/Button";
 import { ordersRepo, type LocalOrder } from "../offline/ordersRepo";
 import { tasksRepo, type LocalTask } from "../offline/tasksRepo";
 import { useSync } from "../offline/SyncContext";
+import { orderImagesApi, type OrderImage } from "../api/orderImages";
+import { ApiError } from "../api/client";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE, isOrderLate } from "../domain/orderStatus";
 import { useAuth } from "../auth/AuthContext";
 import { colors, spacing, typography } from "../theme/tokens";
@@ -31,6 +35,9 @@ export function OrderDetailScreen({ route, navigation }: Props) {
   const { orderId } = route.params;
   const [order, setOrder] = useState<LocalOrder | null>(null);
   const [tasks, setTasks] = useState<LocalTask[]>([]);
+  const [images, setImages] = useState<OrderImage[]>([]);
+  const [imagesError, setImagesError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
 
@@ -48,6 +55,14 @@ export function OrderDetailScreen({ route, navigation }: Props) {
       setTasks(loadedTasks);
     } catch {
       setError("Impossible de charger cette commande.");
+    }
+    try {
+      // Les photos ne sont pas encore synchronisées hors connexion (voir ARCHITECTURE.md) :
+      // leur liste nécessite une connexion, avec un message clair si elle est indisponible.
+      setImages(await orderImagesApi.list(orderId));
+      setImagesError(null);
+    } catch {
+      setImagesError("Photos disponibles uniquement en ligne (connexion requise).");
     }
   }, [orderId]);
 
@@ -71,6 +86,45 @@ export function OrderDetailScreen({ route, navigation }: Props) {
       setError("Impossible d'enregistrer ce changement de statut sur l'appareil.");
     } finally {
       setUpdating(false);
+    }
+  }
+
+  async function addPhoto() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setImagesError("Autorisation refusée pour accéder aux photos.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.7,
+    });
+    if (result.canceled || result.assets.length === 0) return;
+
+    const asset = result.assets[0];
+    const contentType = asset.mimeType ?? "image/jpeg";
+
+    setUploading(true);
+    setImagesError(null);
+    try {
+      const { uploadUrl, publicUrl } = await orderImagesApi.presignUpload(orderId, contentType);
+      const uploadResult = await FileSystem.uploadAsync(uploadUrl, asset.uri, {
+        httpMethod: "PUT",
+        headers: { "Content-Type": contentType },
+      });
+      if (uploadResult.status < 200 || uploadResult.status >= 300) {
+        throw new Error("Échec de l'envoi de la photo au stockage.");
+      }
+      await orderImagesApi.attach(orderId, publicUrl);
+      setImages(await orderImagesApi.list(orderId));
+    } catch (e) {
+      setImagesError(
+        e instanceof ApiError && e.status === 503
+          ? "Le stockage des photos n'est pas configuré sur ce serveur."
+          : "Impossible d'ajouter cette photo.",
+      );
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -189,6 +243,24 @@ export function OrderDetailScreen({ route, navigation }: Props) {
         ))
       )}
 
+      <Text style={styles.section}>Photos</Text>
+      {imagesError ? <Text style={styles.error}>⚠️ {imagesError}</Text> : null}
+      {images.length > 0 ? (
+        <View style={styles.photoGrid}>
+          {images.map((image) => (
+            <Image key={image.id} source={{ uri: image.url }} style={styles.photo} />
+          ))}
+        </View>
+      ) : !imagesError ? (
+        <Text style={styles.body}>Aucune photo pour le moment.</Text>
+      ) : null}
+      <Button
+        label={uploading ? "Envoi…" : "📷 Ajouter une photo"}
+        variant="secondary"
+        onPress={addPhoto}
+        loading={uploading}
+      />
+
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
     </ScrollView>
   );
@@ -254,5 +326,16 @@ const styles = StyleSheet.create({
   error: {
     ...typography.caption,
     color: colors.danger,
+  },
+  photoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  photo: {
+    width: 96,
+    height: 96,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
   },
 });

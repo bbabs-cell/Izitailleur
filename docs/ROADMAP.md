@@ -55,3 +55,12 @@ tests exécutés, résultats, erreurs corrigées, points restants.
       (`GET/PATCH /workshop`, réservé OWNER/ADMIN) repris sur les reçus et les factures. Tests
       réels : 17/17 (payments/finance e2e, incluant contenu réel du PDF décodé). Suite API
       complète 107/107 (deux exécutions consécutives, idempotent).
+- [x] **Infrastructure de production validée et câblée** (hébergement, sauvegardes, stockage des
+      photos, secrets) : point d'entrée serverless Vercel testé de bout en bout (inscription +
+      appel authentifié réel contre PostgreSQL), anti-brute-force basculé sur un stockage Redis
+      partagé quand `REDIS_URL` est défini (vérifié avec deux instances applicatives réelles
+      partageant leur compteur), upload de photos vers Cloudflare R2 (présignature testée
+      réellement, upload final non testé faute de compte R2 réel), paramètres d'atelier
+      réutilisés pour la personnalisation. Voir docs/DEPLOYMENT.md pour la marche à suivre réelle
+      et l'état "Vérifié / Non vérifié" détaillé de chaque brique. Tests réels : 115/115 (API,
+      deux exécutions consécutives, idempotent) + 30/30 (mobile).

@@ -143,6 +143,13 @@ describe("Orders (e2e)", () => {
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(res.body.images).toHaveLength(1);
+
+    const list = await request(app.getHttpServer())
+      .get(`/orders/${orderId}/images`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(list.body).toHaveLength(1);
+    expect(list.body[0].url).toBe("https://example.com/photo.jpg");
   });
 
   it("filtre les commandes par statut", async () => {

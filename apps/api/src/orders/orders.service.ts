@@ -164,6 +164,11 @@ export class OrdersService {
     return updated;
   }
 
+  async listImages(workshopId: string, orderId: string) {
+    await this.getOrThrow(workshopId, orderId);
+    return this.prisma.orderImage.findMany({ where: { orderId }, orderBy: { createdAt: "desc" } });
+  }
+
   async addImage(workshopId: string, orderId: string, dto: CreateOrderImageDto) {
     await this.getOrThrow(workshopId, orderId);
     return this.prisma.orderImage.create({ data: { orderId, url: dto.url } });
