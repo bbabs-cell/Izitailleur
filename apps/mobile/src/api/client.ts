@@ -77,6 +77,11 @@ export async function hasStoredSession(): Promise<boolean> {
   return Boolean(token);
 }
 
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const accessToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+}
+
 export const apiClient = {
   post: <T>(path: string, data?: unknown) =>
     request<T>(path, { method: "POST", body: data ? JSON.stringify(data) : undefined }),

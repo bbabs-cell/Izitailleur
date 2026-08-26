@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { Role } from "@izitailleur/shared";
+import { canViewFinance, type Role } from "@izitailleur/shared";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
@@ -22,7 +22,7 @@ export function HomeScreen({ navigation }: Props) {
       <Card style={styles.card}>
         <Badge label={ROLE_LABELS[user?.role as Role] ?? user?.role ?? ""} tone="info" />
         <Text style={styles.body}>
-          Le tableau de bord (urgences, argent, stock) arrive avec le module Finances. En
+          Le tableau de bord complet (urgences, priorités du jour) arrive en Phase 8. En
           attendant, gérez votre atelier ci-dessous.
         </Text>
       </Card>
@@ -30,6 +30,14 @@ export function HomeScreen({ navigation }: Props) {
       <Button label="Clients" onPress={() => navigation.navigate("Customers")} />
       <Button label="Commandes" onPress={() => navigation.navigate("Orders")} />
       <Button label="Calendrier" onPress={() => navigation.navigate("Calendar")} />
+
+      {user && canViewFinance(user.role as Role) ? (
+        <>
+          <Button label="Argent à récupérer" onPress={() => navigation.navigate("Debts")} />
+          <Button label="Statistiques" onPress={() => navigation.navigate("FinanceStats")} />
+        </>
+      ) : null}
+
       <Button label="Équipe" variant="secondary" onPress={() => navigation.navigate("Team")} />
       <Button label="Tissus" variant="secondary" onPress={() => navigation.navigate("Fabrics")} />
       <Button label="Fournisseurs" variant="secondary" onPress={() => navigation.navigate("Suppliers")} />

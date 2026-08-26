@@ -21,6 +21,9 @@ import { FabricDetailScreen } from "../screens/FabricDetailScreen";
 import { SuppliersListScreen } from "../screens/SuppliersListScreen";
 import { IssuesListScreen } from "../screens/IssuesListScreen";
 import { IssueFormScreen } from "../screens/IssueFormScreen";
+import { OrderPaymentsScreen } from "../screens/OrderPaymentsScreen";
+import { DebtsScreen } from "../screens/DebtsScreen";
+import { FinanceStatsScreen } from "../screens/FinanceStatsScreen";
 import { colors } from "../theme/tokens";
 
 export type AuthStackParamList = {
@@ -46,6 +49,9 @@ export type AppStackParamList = {
   Suppliers: undefined;
   Issues: undefined;
   IssueForm: undefined;
+  OrderPayments: { orderId: string };
+  Debts: undefined;
+  FinanceStats: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -130,6 +136,21 @@ export function RootNavigator() {
             name="IssueForm"
             component={IssueFormScreen}
             options={{ title: "Signaler un problème" }}
+          />
+          <AppStack.Screen
+            name="OrderPayments"
+            component={OrderPaymentsScreen}
+            options={{ title: "Paiements" }}
+          />
+          <AppStack.Screen
+            name="Debts"
+            component={DebtsScreen}
+            options={{ title: "Argent à récupérer" }}
+          />
+          <AppStack.Screen
+            name="FinanceStats"
+            component={FinanceStatsScreen}
+            options={{ title: "Statistiques" }}
           />
         </AppStack.Navigator>
       ) : (

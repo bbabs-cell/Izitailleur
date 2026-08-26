@@ -46,6 +46,7 @@ async function main() {
     data: { profileId: profile.id, values: { poitrine: 104, taille: 92, epaule: 48 } },
   });
 
+  const orders = [];
   for (let i = 248; i <= 250; i++) {
     await prisma.workshop.update({
       where: { id: workshop.id },
@@ -73,6 +74,7 @@ async function main() {
     await prisma.orderTask.create({
       data: { orderId: order.id, title: "Vérifier les manches", assignedToId: tailor.id },
     });
+    orders.push(order);
   }
 
   await prisma.appointment.create({
@@ -111,6 +113,32 @@ async function main() {
       priority: "URGENT",
       description: "Ne démarre plus depuis ce matin",
       assignedToId: tailor.id,
+    },
+  });
+
+  const firstOrder = orders[0];
+  const workshopWithReceipt = await prisma.workshop.update({
+    where: { id: workshop.id },
+    data: { receiptSequence: { increment: 1 } },
+  });
+  const payment = await prisma.payment.create({
+    data: {
+      workshopId: workshop.id,
+      orderId: firstOrder.id,
+      amount: 5000,
+      method: "WAVE",
+      recordedById: owner.id,
+      note: "Second versement",
+    },
+  });
+  await prisma.receipt.create({
+    data: {
+      workshopId: workshop.id,
+      orderId: firstOrder.id,
+      paymentId: payment.id,
+      number: `R-${String(workshopWithReceipt.receiptSequence).padStart(5, "0")}`,
+      amount: 5000,
+      method: "WAVE",
     },
   });
 

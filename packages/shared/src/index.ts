@@ -6,3 +6,4 @@ export * from "./appointment.schemas";
 export * from "./fabric.schemas";
 export * from "./issue.schemas";
 export * from "./employee.schemas";
+export * from "./payment.schemas";

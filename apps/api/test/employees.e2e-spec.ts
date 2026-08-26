@@ -20,19 +20,21 @@ describe("Employees (e2e)", () => {
 
   let apprenticeId: string;
   let apprenticeToken: string;
+  const apprenticePhone = `+22179998${Date.now().toString().slice(-4)}`;
+  const otherPhone = `+22179997${Date.now().toString().slice(-4)}`;
 
   it("invite un apprenti", async () => {
     const res = await request(app.getHttpServer())
       .post("/employees")
       .set("Authorization", `Bearer ${ownerToken}`)
-      .send({ fullName: "Fatou Ndiaye", phone: "+221799990001", password: "demo12345", role: "APPRENTICE" })
+      .send({ fullName: "Fatou Ndiaye", phone: apprenticePhone, password: "demo12345", role: "APPRENTICE" })
       .expect(201);
     apprenticeId = res.body.id;
     expect(res.body.role).toBe("APPRENTICE");
 
     const login = await request(app.getHttpServer())
       .post("/auth/login")
-      .send({ phone: "+221799990001", password: "demo12345" })
+      .send({ phone: apprenticePhone, password: "demo12345" })
       .expect(200);
     apprenticeToken = login.body.accessToken;
   });
@@ -41,7 +43,7 @@ describe("Employees (e2e)", () => {
     await request(app.getHttpServer())
       .post("/employees")
       .set("Authorization", `Bearer ${apprenticeToken}`)
-      .send({ fullName: "Autre", phone: "+221799990002", password: "demo12345", role: "TAILOR" })
+      .send({ fullName: "Autre", phone: otherPhone, password: "demo12345", role: "TAILOR" })
       .expect(403);
   });
 

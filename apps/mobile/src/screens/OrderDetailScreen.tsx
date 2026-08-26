@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { canTransitionOrderStatus, ORDER_STATUSES, type OrderStatus } from "@izitailleur/shared";
+import {
+  canTransitionOrderStatus,
+  canViewFinance,
+  ORDER_STATUSES,
+  type OrderStatus,
+  type Role,
+} from "@izitailleur/shared";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { ordersApi, type OrderDetail } from "../api/orders";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE, isOrderLate } from "../domain/orderStatus";
+import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
 import { colors, spacing, typography } from "../theme/tokens";
 import type { AppStackParamList } from "../navigation/RootNavigator";
@@ -14,6 +21,7 @@ import type { AppStackParamList } from "../navigation/RootNavigator";
 type Props = NativeStackScreenProps<AppStackParamList, "OrderDetail">;
 
 export function OrderDetailScreen({ route, navigation }: Props) {
+  const { user } = useAuth();
   const { orderId } = route.params;
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -118,10 +126,18 @@ export function OrderDetailScreen({ route, navigation }: Props) {
         </Text>
         <Text style={[styles.body, balance > 0 ? styles.balanceDue : styles.balancePaid]}>
           {balance > 0
-            ? `Solde restant : ${balance.toLocaleString("fr-FR")} FCFA`
-            : "Payée intégralement"}
+            ? `Solde restant (acompte uniquement) : ${balance.toLocaleString("fr-FR")} FCFA`
+            : "Acompte couvrant le prix total"}
         </Text>
       </Card>
+
+      {user && canViewFinance(user.role as Role) ? (
+        <Button
+          label="Voir les paiements et reçus"
+          variant="secondary"
+          onPress={() => navigation.navigate("OrderPayments", { orderId: order.id })}
+        />
+      ) : null}
 
       <Text style={styles.section}>Progression</Text>
       <View style={styles.row}>

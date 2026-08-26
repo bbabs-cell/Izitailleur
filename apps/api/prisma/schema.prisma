@@ -19,14 +19,15 @@ enum Role {
 }
 
 model Workshop {
-  id            String    @id @default(uuid())
-  name          String
-  phone         String?
-  address       String?
-  orderSequence Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
+  id              String    @id @default(uuid())
+  name            String
+  phone           String?
+  address         String?
+  orderSequence   Int       @default(0)
+  receiptSequence Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
   users        User[]
   customers    Customer[]
@@ -35,6 +36,8 @@ model Workshop {
   suppliers    Supplier[]
   fabrics      Fabric[]
   issues       WorkshopIssue[]
+  payments     Payment[]
+  receipts     Receipt[]
 }
 
 model User {
@@ -50,9 +53,10 @@ model User {
   updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
 
-  assignedOrders Order[]         @relation("OrderAssignee")
-  assignedTasks  OrderTask[]     @relation("TaskAssignee")
-  assignedIssues WorkshopIssue[] @relation("IssueAssignee")
+  assignedOrders   Order[]         @relation("OrderAssignee")
+  assignedTasks    OrderTask[]     @relation("TaskAssignee")
+  assignedIssues   WorkshopIssue[] @relation("IssueAssignee")
+  recordedPayments Payment[]       @relation("PaymentRecorder")
 
   @@index([workshopId])
 }
@@ -161,6 +165,8 @@ model Order {
   statusHistory OrderStatusChange[]
   appointments  Appointment[]
   issues        WorkshopIssue[]
+  payments      Payment[]
+  receipts      Receipt[]
 
   @@unique([workshopId, reference])
   @@index([workshopId])
@@ -344,4 +350,49 @@ model WorkshopIssue {
 
   @@index([workshopId])
   @@index([workshopId, status])
+}
+
+enum PaymentMethod {
+  CASH
+  WAVE
+  ORANGE_MONEY
+  MOOV_MONEY
+  MTN_MONEY
+  OTHER
+}
+
+model Payment {
+  id           String        @id @default(uuid())
+  workshopId   String
+  workshop     Workshop      @relation(fields: [workshopId], references: [id])
+  orderId      String
+  order        Order         @relation(fields: [orderId], references: [id])
+  amount       Int
+  method       PaymentMethod
+  note         String?
+  recordedById String?
+  recordedBy   User?         @relation("PaymentRecorder", fields: [recordedById], references: [id])
+  createdAt    DateTime      @default(now())
+
+  receipt Receipt?
+
+  @@index([workshopId])
+  @@index([orderId])
+}
+
+model Receipt {
+  id         String        @id @default(uuid())
+  workshopId String
+  workshop   Workshop      @relation(fields: [workshopId], references: [id])
+  number     String
+  orderId    String
+  order      Order         @relation(fields: [orderId], references: [id])
+  paymentId  String?       @unique
+  payment    Payment?      @relation(fields: [paymentId], references: [id])
+  amount     Int
+  method     PaymentMethod
+  createdAt  DateTime      @default(now())
+
+  @@unique([workshopId, number])
+  @@index([workshopId])
 }
