@@ -15,7 +15,9 @@ contient des erreurs critiques non résolues.
 - [x] **PHASE 3 — Atelier** : équipe/apprentis (invitation, rôles, RBAC réel), tissus/stock
       (mouvements, alerte stock faible, consommation atomique liée aux commandes), fournisseurs,
       problèmes d'atelier. Tests réels : 44/44 (API) + 15/15 (mobile).
-- [ ] **PHASE 4 — Finances** : paiements, dettes, reçus, statistiques financières.
+- [x] **PHASE 4 — Finances** : paiements (5 modes), reçus PDF réels (génération + partage),
+      vue "argent à récupérer", statistiques financières basées sur les données réelles, accès
+      restreint aux rôles autorisés. Tests réels : 54/54 (API) + 17/17 (mobile).
 - [ ] **PHASE 5 — Offline** : stockage local, synchronisation, gestion des conflits.
 - [ ] **PHASE 6 — Notifications** : rappels, alertes, notifications.
 - [ ] **PHASE 7 — IA** : AIService, contexte sécurisé, premières commandes IA.
