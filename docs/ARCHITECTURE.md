@@ -55,8 +55,8 @@ Chaque entité critique porte `createdAt`, `updatedAt`, `deletedAt` (suppression
 - Hébergement du backend et de la base de données (coût, fournisseur).
 - Stratégie de stockage des photos (S3-compatible ? local + CDN ?).
 - Fournisseur de notifications push.
-- Portée exacte de l'intégration IA (PHASE 7) — aucun appel à un service IA externe ne sera
-  câblé sans validation explicite (coût, fournisseur, confidentialité des données clients).
+- ~~Portée exacte de l'intégration IA (PHASE 7)~~ — tranché : voir section IA ci-dessous.
+  Aucun appel à un service IA externe n'a été câblé.
 
 Ces points seront soumis à validation avant d'être implémentés, conformément à la règle de
 décision du projet (changements profonds = validation requise).
@@ -146,3 +146,41 @@ implémentation, conformément à la règle de décision du projet.
   est testée unitairement, y compris les cas limites (rendez-vous déjà passé, trop proche pour
   laisser un délai). L'appel réel à l'API de notifications native de l'appareil n'est pas testé
   automatiquement (nécessite un appareil/émulateur).
+
+## Assistant IA (Phase 7)
+
+### Décision (validée avec l'utilisateur avant implémentation)
+
+Deux options ont été soumises : un moteur déterministe (aucun appel externe) ou une couche de
+compréhension du langage naturel appuyée sur l'API Claude d'Anthropic (nécessitant une clé API,
+un coût par requête, et l'envoi de données de l'atelier à un service tiers). **L'option moteur
+déterministe a été choisie.** Aucun appel à un service IA externe n'est câblé dans le code.
+
+### Mécanisme
+
+`AiService` (`apps/api/src/ai/ai.service.ts`) reconnaît les questions par mots-clés (en
+français, insensible aux accents) et traduit chaque question reconnue en une vraie requête sur
+les données de l'atelier — jamais de réponse inventée. Questions couvertes (celles listées dans
+le cahier des charges) :
+
+- « Qu'est-ce que je dois faire aujourd'hui ? » → rendez-vous du jour, commandes à livrer
+  aujourd'hui, tâches assignées à l'utilisateur non terminées.
+- « Quelles commandes sont en retard ? » → commandes non livrées dont la date limite est
+  dépassée.
+- « Pourquoi mes commandes sont-elles en retard ? » → même liste, avec les problèmes d'atelier
+  liés à chaque commande (ou « aucun problème signalé » si rien n'a été consigné — jamais de
+  cause inventée).
+- « Qui travaille sur la commande #XXXX ? » → responsable + personnes assignées aux tâches de
+  cette commande précise.
+- « Qui me doit de l'argent ? » → dettes réelles, **restreint aux rôles autorisés** (OWNER/
+  ADMIN/MANAGER, comme le reste du module Finances) ; un apprenti reçoit une réponse explicite
+  de refus d'accès, jamais les données.
+- « Quel tissu va bientôt manquer ? » → tissus en stock faible.
+- Toute question non reconnue → réponse honnête (« je ne comprends pas ») avec des exemples,
+  plutôt qu'une réponse générique ou devinée.
+
+### Ce qui est réellement testé
+
+11 tests e2e contre PostgreSQL réel (`apps/api/test/ai.e2e-spec.ts`), couvrant les six types de
+questions du cahier des charges, la détection d'une commande introuvable (pas d'invention), le
+respect des permissions financières par rôle, et le refus honnête d'une question hors périmètre.

@@ -27,6 +27,7 @@ import { DebtsScreen } from "../screens/DebtsScreen";
 import { FinanceStatsScreen } from "../screens/FinanceStatsScreen";
 import { SyncStatusScreen } from "../screens/SyncStatusScreen";
 import { NotificationsScreen } from "../screens/NotificationsScreen";
+import { AssistantScreen } from "../screens/AssistantScreen";
 import { SyncProvider } from "../offline/SyncContext";
 import { colors } from "../theme/tokens";
 
@@ -59,6 +60,7 @@ export type AppStackParamList = {
   FinanceStats: undefined;
   SyncStatus: undefined;
   Notifications: undefined;
+  Assistant: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -174,6 +176,11 @@ export function RootNavigator() {
             name="Notifications"
             component={NotificationsScreen}
             options={{ title: "Notifications" }}
+          />
+          <AppStack.Screen
+            name="Assistant"
+            component={AssistantScreen}
+            options={{ title: "Assistant" }}
           />
         </AppStack.Navigator>
         </SyncProvider>

@@ -58,6 +58,8 @@ export function HomeScreen({ navigation }: Props) {
         <Button label="Synchronisation" variant="secondary" onPress={() => navigation.navigate("SyncStatus")} />
       </Card>
 
+      <Button label="Assistant de l'atelier" onPress={() => navigation.navigate("Assistant")} />
+
       <Button label="Clients" onPress={() => navigation.navigate("Customers")} />
       <Button label="Commandes" onPress={() => navigation.navigate("Orders")} />
       <Button label="Calendrier" onPress={() => navigation.navigate("Calendar")} />
