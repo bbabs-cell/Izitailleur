@@ -4,27 +4,31 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
-import { ordersApi, type OrderListItem } from "../api/orders";
+import { ordersRepo, type LocalOrder } from "../offline/ordersRepo";
+import { useSync } from "../offline/SyncContext";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE, isOrderLate } from "../domain/orderStatus";
 import { colors, spacing, typography } from "../theme/tokens";
 import type { AppStackParamList } from "../navigation/RootNavigator";
+import type { OrderStatus } from "@izitailleur/shared";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Orders">;
 
+/**
+ * Source de données : la base SQLite locale (offline-first), tenue à jour par le SyncContext.
+ * Les créations écrivent immédiatement en local ; la référence (numéro séquentiel) n'est
+ * connue qu'après synchronisation avec le serveur (affichée "en attente" en attendant).
+ */
 export function OrdersListScreen({ navigation }: Props) {
-  const [orders, setOrders] = useState<OrderListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { status: syncStatus } = useSync();
+  const [orders, setOrders] = useState<LocalOrder[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
-      setOrders(await ordersApi.list());
+      setOrders(await ordersRepo.list());
+      setError(null);
     } catch {
-      setError("Impossible de charger les commandes.");
-    } finally {
-      setLoading(false);
+      setError("Impossible de lire les commandes enregistrées localement.");
     }
   }, []);
 
@@ -33,20 +37,22 @@ export function OrdersListScreen({ navigation }: Props) {
     return unsubscribe;
   }, [navigation, load]);
 
+  useEffect(() => {
+    if (syncStatus === "idle") load();
+  }, [syncStatus, load]);
+
   return (
     <View style={styles.container}>
+      {syncStatus === "offline" ? <Badge label="Hors connexion — données locales" tone="warning" /> : null}
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
+
       <FlatList
         data={orders}
         keyExtractor={(item) => item.id}
-        refreshing={loading}
-        onRefresh={load}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          !loading ? <Text style={styles.empty}>Aucune commande pour le moment.</Text> : null
-        }
+        ListEmptyComponent={<Text style={styles.empty}>Aucune commande pour le moment.</Text>}
         renderItem={({ item }) => {
-          const late = isOrderLate(item.dueDate, item.status);
+          const late = isOrderLate(item.dueDate, item.status as OrderStatus);
           return (
             <Pressable
               accessibilityRole="button"
@@ -54,14 +60,21 @@ export function OrdersListScreen({ navigation }: Props) {
             >
               <Card style={styles.card}>
                 <View style={styles.headerRow}>
-                  <Text style={styles.reference}>#{item.reference}</Text>
-                  <Badge label={ORDER_STATUS_LABELS[item.status]} tone={ORDER_STATUS_TONE[item.status]} />
+                  <Text style={styles.reference}>{item.reference ? `#${item.reference}` : "En attente"}</Text>
+                  <Badge
+                    label={ORDER_STATUS_LABELS[item.status as OrderStatus]}
+                    tone={ORDER_STATUS_TONE[item.status as OrderStatus]}
+                  />
                 </View>
                 <Text style={styles.model}>{item.modelName}</Text>
                 <Text style={styles.customer}>
-                  {item.customer.firstName} {item.customer.lastName}
+                  {item.customerFirstName} {item.customerLastName}
                 </Text>
-                {late ? <Badge label="En retard" tone="danger" /> : null}
+                <View style={styles.headerRow}>
+                  {late ? <Badge label="En retard" tone="danger" /> : null}
+                  {item.dirty ? <Badge label="Non synchronisé" tone="info" /> : null}
+                  {item.conflict ? <Badge label="Conflit" tone="danger" /> : null}
+                </View>
               </Card>
             </Pressable>
           );
@@ -90,6 +103,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: spacing.xs,
   },
   reference: {
     ...typography.subtitle,

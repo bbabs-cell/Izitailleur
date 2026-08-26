@@ -5,9 +5,9 @@ import { createOrderSchema, PRIORITIES, type Priority } from "@izitailleur/share
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { Badge } from "../components/Badge";
-import { ordersApi } from "../api/orders";
-import { customersApi, type Customer } from "../api/customers";
-import { ApiError } from "../api/client";
+import { ordersRepo } from "../offline/ordersRepo";
+import { customersRepo } from "../offline/customersRepo";
+import type { LocalCustomer as Customer } from "../offline/customersRepo";
 import { colors, spacing, typography } from "../theme/tokens";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
@@ -40,7 +40,7 @@ export function OrderFormScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     if (!preselectedCustomerId) {
-      customersApi.list().then(setCustomers).catch(() => setCustomers([]));
+      customersRepo.list().then(setCustomers).catch(() => setCustomers([]));
     }
   }, [preselectedCustomerId]);
 
@@ -84,10 +84,11 @@ export function OrderFormScreen({ route, navigation }: Props) {
 
     setLoading(true);
     try {
-      const order = await ordersApi.create(parsed.data);
+      // Écriture locale immédiate : fonctionne hors connexion, synchronisée en arrière-plan.
+      const order = await ordersRepo.create(parsed.data);
       navigation.replace("OrderDetail", { orderId: order.id });
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Impossible de créer la commande.");
+    } catch {
+      setError("Impossible d'enregistrer cette commande sur l'appareil.");
     } finally {
       setLoading(false);
     }

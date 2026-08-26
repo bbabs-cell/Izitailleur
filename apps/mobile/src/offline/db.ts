@@ -47,6 +47,43 @@ async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
       serverSnapshot TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS orders_local (
+      id TEXT PRIMARY KEY NOT NULL,
+      reference TEXT,
+      customerId TEXT NOT NULL,
+      customerFirstName TEXT NOT NULL,
+      customerLastName TEXT NOT NULL,
+      modelName TEXT NOT NULL,
+      fabricDescription TEXT,
+      price INTEGER NOT NULL,
+      deposit INTEGER NOT NULL,
+      dueDate TEXT NOT NULL,
+      priority TEXT NOT NULL,
+      status TEXT NOT NULL,
+      instructions TEXT,
+      notes TEXT,
+      localUpdatedAt TEXT NOT NULL,
+      serverUpdatedAt TEXT,
+      deletedAt TEXT,
+      dirty INTEGER NOT NULL DEFAULT 0,
+      conflict INTEGER NOT NULL DEFAULT 0,
+      serverSnapshot TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS tasks_local (
+      id TEXT PRIMARY KEY NOT NULL,
+      orderId TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      status TEXT NOT NULL,
+      dueDate TEXT,
+      localUpdatedAt TEXT NOT NULL,
+      serverUpdatedAt TEXT,
+      dirty INTEGER NOT NULL DEFAULT 0,
+      conflict INTEGER NOT NULL DEFAULT 0,
+      serverSnapshot TEXT
+    );
+
     CREATE TABLE IF NOT EXISTS mutation_queue (
       entity TEXT NOT NULL,
       recordId TEXT NOT NULL,

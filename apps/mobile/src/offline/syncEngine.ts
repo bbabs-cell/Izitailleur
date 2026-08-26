@@ -5,6 +5,8 @@ import { getLastSyncAt, setLastSyncAt } from "./db";
 import { listQueue, removeFromQueue, pendingIdsForEntity } from "./mutationQueue";
 import { customersRepo } from "./customersRepo";
 import { appointmentsRepo } from "./appointmentsRepo";
+import { ordersRepo } from "./ordersRepo";
+import { tasksRepo } from "./tasksRepo";
 import { decidePushResultAction, shouldSkipPullOverwrite } from "./syncLogic";
 
 export type SyncStatus = "idle" | "syncing" | "offline" | "error";
@@ -40,9 +42,16 @@ export async function syncNow(): Promise<SyncSummary> {
 
     const results = await apiClient.post<SyncMutationResult[]>("/sync/push", { mutations });
 
+    const repoByEntity = {
+      customer: customersRepo,
+      appointment: appointmentsRepo,
+      order: ordersRepo,
+      task: tasksRepo,
+    } as const;
+
     for (const result of results) {
       const action = decidePushResultAction(result);
-      const repo = result.entity === "customer" ? customersRepo : appointmentsRepo;
+      const repo = repoByEntity[result.entity];
 
       if (action.kind === "clear-local") {
         const record = action.serverRecord as { updatedAt: string };
@@ -66,6 +75,8 @@ export async function syncNow(): Promise<SyncSummary> {
     serverTime: string;
     customers: Array<{ id: string; updatedAt: string; [key: string]: unknown }>;
     appointments: Array<{ id: string; updatedAt: string; [key: string]: unknown }>;
+    orders: Array<{ id: string; updatedAt: string; [key: string]: unknown }>;
+    tasks: Array<{ id: string; updatedAt: string; [key: string]: unknown }>;
   }>(`/sync/pull?since=${encodeURIComponent(since)}`);
 
   const pendingCustomerIds = await pendingIdsForEntity("customer");
@@ -79,6 +90,20 @@ export async function syncNow(): Promise<SyncSummary> {
   for (const record of pulled.appointments) {
     if (shouldSkipPullOverwrite(pendingAppointmentIds, record.id)) continue;
     await appointmentsRepo.applyServerRecord(record as never);
+    summary.pulled += 1;
+  }
+
+  const pendingOrderIds = await pendingIdsForEntity("order");
+  for (const record of pulled.orders) {
+    if (shouldSkipPullOverwrite(pendingOrderIds, record.id)) continue;
+    await ordersRepo.applyServerRecord(record as never);
+    summary.pulled += 1;
+  }
+
+  const pendingTaskIds = await pendingIdsForEntity("task");
+  for (const record of pulled.tasks) {
+    if (shouldSkipPullOverwrite(pendingTaskIds, record.id)) continue;
+    await tasksRepo.applyServerRecord(record as never);
     summary.pulled += 1;
   }
 

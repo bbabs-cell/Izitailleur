@@ -11,25 +11,41 @@ import {
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
-import { ordersApi, type OrderDetail } from "../api/orders";
+import { ordersRepo, type LocalOrder } from "../offline/ordersRepo";
+import { tasksRepo, type LocalTask } from "../offline/tasksRepo";
+import { useSync } from "../offline/SyncContext";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE, isOrderLate } from "../domain/orderStatus";
 import { useAuth } from "../auth/AuthContext";
-import { ApiError } from "../api/client";
 import { colors, spacing, typography } from "../theme/tokens";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "OrderDetail">;
 
+/**
+ * Source de données : SQLite local (offline-first). Les changements de statut (commande et
+ * tâches) s'écrivent immédiatement en local et se synchronisent en arrière-plan.
+ */
 export function OrderDetailScreen({ route, navigation }: Props) {
   const { user } = useAuth();
+  const { status: syncStatus } = useSync();
   const { orderId } = route.params;
-  const [order, setOrder] = useState<OrderDetail | null>(null);
+  const [order, setOrder] = useState<LocalOrder | null>(null);
+  const [tasks, setTasks] = useState<LocalTask[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      setOrder(await ordersApi.get(orderId));
+      const [loadedOrder, loadedTasks] = await Promise.all([
+        ordersRepo.get(orderId),
+        tasksRepo.listByOrder(orderId),
+      ]);
+      if (!loadedOrder) {
+        setError("Commande introuvable localement.");
+        return;
+      }
+      setOrder(loadedOrder);
+      setTasks(loadedTasks);
     } catch {
       setError("Impossible de charger cette commande.");
     }
@@ -40,25 +56,28 @@ export function OrderDetailScreen({ route, navigation }: Props) {
     return unsubscribe;
   }, [navigation, load]);
 
+  useEffect(() => {
+    if (syncStatus === "idle") load();
+  }, [syncStatus, load]);
+
   async function moveTo(status: OrderStatus) {
     if (!order) return;
     setUpdating(true);
     setError(null);
     try {
-      await ordersApi.updateStatus(order.id, status);
+      await ordersRepo.updateStatus(order.id, status);
       await load();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Transition de statut impossible.");
+    } catch {
+      setError("Impossible d'enregistrer ce changement de statut sur l'appareil.");
     } finally {
       setUpdating(false);
     }
   }
 
   async function toggleTask(taskId: string, currentStatus: string) {
-    if (!order) return;
     const nextStatus = currentStatus === "DONE" ? "TODO" : "DONE";
     try {
-      await ordersApi.updateTaskStatus(order.id, taskId, nextStatus);
+      await tasksRepo.updateStatus(taskId, nextStatus);
       await load();
     } catch {
       setError("Impossible de mettre à jour la tâche.");
@@ -81,22 +100,25 @@ export function OrderDetailScreen({ route, navigation }: Props) {
     );
   }
 
-  const late = isOrderLate(order.dueDate, order.status);
+  const status = order.status as OrderStatus;
+  const late = isOrderLate(order.dueDate, status);
   const balance = order.price - order.deposit;
-  const nextStatuses = ORDER_STATUSES.filter((s) => canTransitionOrderStatus(order.status, s));
+  const nextStatuses = ORDER_STATUSES.filter((s) => canTransitionOrderStatus(status, s));
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>#{order.reference}</Text>
-        <Badge label={ORDER_STATUS_LABELS[order.status]} tone={ORDER_STATUS_TONE[order.status]} />
+        <Text style={styles.title}>{order.reference ? `#${order.reference}` : "En attente de synchro"}</Text>
+        <Badge label={ORDER_STATUS_LABELS[status]} tone={ORDER_STATUS_TONE[status]} />
       </View>
       {late ? <Badge label="Urgent — en retard" tone="danger" /> : null}
+      {order.dirty ? <Badge label="Non synchronisé" tone="info" /> : null}
+      {order.conflict ? <Badge label="Conflit à résoudre (voir Synchronisation)" tone="danger" /> : null}
 
       <Card style={styles.card}>
         <Text style={styles.label}>CLIENT</Text>
         <Text style={styles.body}>
-          {order.customer.firstName} {order.customer.lastName}
+          {order.customerFirstName} {order.customerLastName}
         </Text>
         <Text style={styles.label}>MODÈLE</Text>
         <Text style={styles.body}>{order.modelName}</Text>
@@ -108,12 +130,6 @@ export function OrderDetailScreen({ route, navigation }: Props) {
         ) : null}
         <Text style={styles.label}>DATE LIMITE</Text>
         <Text style={styles.body}>{new Date(order.dueDate).toLocaleDateString("fr-FR")}</Text>
-        {order.assignedTo ? (
-          <>
-            <Text style={styles.label}>RESPONSABLE</Text>
-            <Text style={styles.body}>{order.assignedTo.fullName}</Text>
-          </>
-        ) : null}
         {order.instructions ? (
           <>
             <Text style={styles.label}>INSTRUCTIONS</Text>
@@ -157,26 +173,20 @@ export function OrderDetailScreen({ route, navigation }: Props) {
       </View>
 
       <Text style={styles.section}>Tâches</Text>
-      {order.tasks.length === 0 ? (
+      {tasks.length === 0 ? (
         <Text style={styles.body}>Aucune tâche pour cette commande.</Text>
       ) : (
-        order.tasks.map((task) => (
+        tasks.map((task) => (
           <Pressable key={task.id} onPress={() => toggleTask(task.id, task.status)}>
             <Card style={styles.taskCard}>
               <Text style={styles.checkbox}>{task.status === "DONE" ? "☑" : "☐"}</Text>
               <Text style={[styles.body, task.status === "DONE" ? styles.taskDone : null]}>
                 {task.title}
               </Text>
+              {task.dirty ? <Badge label="Non synchronisé" tone="info" /> : null}
             </Card>
           </Pressable>
         ))
-      )}
-
-      <Text style={styles.section}>Photos</Text>
-      {order.images.length === 0 ? (
-        <Text style={styles.body}>Aucune photo pour le moment.</Text>
-      ) : (
-        <Text style={styles.body}>{order.images.length} photo(s) associée(s)</Text>
       )}
 
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}

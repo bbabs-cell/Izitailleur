@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { createOrderSchema, createOrderTaskSchema, updateOrderStatusSchema, updateOrderTaskStatusSchema } from "./order.schemas";
 
-export const SYNCABLE_ENTITIES = ["customer", "appointment"] as const;
+export const SYNCABLE_ENTITIES = ["customer", "appointment", "order", "task"] as const;
 export type SyncableEntity = (typeof SYNCABLE_ENTITIES)[number];
 
 export const syncCustomerDataSchema = z.object({
@@ -21,6 +22,18 @@ export const syncAppointmentDataSchema = z.object({
   endAt: z.string().datetime().optional().nullable(),
   notes: z.string().max(1000).optional().nullable(),
 });
+
+// Commandes : la création réutilise exactement le schéma de l'endpoint POST /orders (référence
+// et validation de stock gérées côté serveur au moment de l'application de la mutation). La
+// seule mise à jour hors connexion prise en charge est un changement de statut — il n'existe
+// aucune édition de champs ni suppression de commande, hors connexion ou non.
+export const syncOrderCreateDataSchema = createOrderSchema;
+export const syncOrderUpdateDataSchema = updateOrderStatusSchema;
+
+// Tâches : mêmes limites — création (rattachée à une commande) et changement de statut
+// uniquement, aucune suppression.
+export const syncTaskCreateDataSchema = createOrderTaskSchema.extend({ orderId: z.string().uuid() });
+export const syncTaskUpdateDataSchema = updateOrderTaskStatusSchema;
 
 export const syncMutationSchema = z.discriminatedUnion("op", [
   z.object({

@@ -6,6 +6,9 @@ import { Button } from "../components/Button";
 import { useSync } from "../offline/SyncContext";
 import { customersRepo, type LocalCustomer } from "../offline/customersRepo";
 import { appointmentsRepo, type LocalAppointment } from "../offline/appointmentsRepo";
+import { ordersRepo, type LocalOrder } from "../offline/ordersRepo";
+import { ORDER_STATUS_LABELS } from "../domain/orderStatus";
+import type { OrderStatus } from "@izitailleur/shared";
 import { colors, spacing, typography } from "../theme/tokens";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -26,10 +29,12 @@ export function SyncStatusScreen() {
   const { status, pendingCount, lastSummary, lastError, syncNow } = useSync();
   const [customerConflicts, setCustomerConflicts] = useState<LocalCustomer[]>([]);
   const [appointmentConflicts, setAppointmentConflicts] = useState<LocalAppointment[]>([]);
+  const [orderConflicts, setOrderConflicts] = useState<LocalOrder[]>([]);
 
   const loadConflicts = useCallback(async () => {
     setCustomerConflicts(await customersRepo.listConflicts());
     setAppointmentConflicts(await appointmentsRepo.listConflicts());
+    setOrderConflicts(await ordersRepo.listConflicts());
   }, []);
 
   useEffect(() => {
@@ -56,6 +61,16 @@ export function SyncStatusScreen() {
     if (keep === "mine") await syncNow();
   }
 
+  async function resolveOrder(record: LocalOrder, keep: "mine" | "server") {
+    if (keep === "mine") {
+      await ordersRepo.keepMine(record);
+    } else {
+      await ordersRepo.useServer(record);
+    }
+    await loadConflicts();
+    if (keep === "mine") await syncNow();
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Card style={styles.card}>
@@ -73,7 +88,7 @@ export function SyncStatusScreen() {
         <Button label="Synchroniser maintenant" onPress={syncNow} loading={status === "syncing"} />
       </Card>
 
-      {(customerConflicts.length > 0 || appointmentConflicts.length > 0) && (
+      {(customerConflicts.length > 0 || appointmentConflicts.length > 0 || orderConflicts.length > 0) && (
         <>
           <Text style={styles.section}>Conflits à résoudre</Text>
           <Text style={styles.body}>
@@ -134,6 +149,31 @@ export function SyncStatusScreen() {
                 onPress={() => resolveAppointment(record, "mine")}
               />
               <Button label="Utiliser le serveur" onPress={() => resolveAppointment(record, "server")} />
+            </View>
+          </Card>
+        );
+      })}
+
+      {orderConflicts.map((record) => {
+        const server = record.serverSnapshot ? JSON.parse(record.serverSnapshot) : {};
+        return (
+          <Card key={record.id} style={styles.conflictCard}>
+            <Badge label="Commande en conflit" tone="danger" />
+            <View style={styles.compareRow}>
+              <View style={styles.compareCol}>
+                <Text style={styles.caption}>Votre version</Text>
+                <Text style={styles.body}>{ORDER_STATUS_LABELS[record.status as OrderStatus]}</Text>
+              </View>
+              <View style={styles.compareCol}>
+                <Text style={styles.caption}>Version du serveur</Text>
+                <Text style={styles.body}>
+                  {server.status ? ORDER_STATUS_LABELS[server.status as OrderStatus] : "—"}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.row}>
+              <Button label="Garder ma version" variant="secondary" onPress={() => resolveOrder(record, "mine")} />
+              <Button label="Utiliser le serveur" onPress={() => resolveOrder(record, "server")} />
             </View>
           </Card>
         );

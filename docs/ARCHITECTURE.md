@@ -65,17 +65,31 @@ décision du projet (changements profonds = validation requise).
 
 ### Portée réelle (honnêteté de l'implémentation)
 
-Seuls **Clients** et **Rendez-vous (calendrier)** sont pleinement offline-first à ce stade :
-lecture ET écriture (création, modification pour les clients) fonctionnent sans connexion,
-avec synchronisation différée. Les autres modules (commandes, tâches, tissus, paiements...)
-restent en ligne uniquement pour l'instant ; ils suivront le même mécanisme dans une phase
-ultérieure. Aucune fonctionnalité offline non listée ici n'est présentée comme disponible.
+**Clients**, **Rendez-vous (calendrier)**, **Commandes** et **Tâches** sont offline-first :
+lecture ET écriture fonctionnent sans connexion, avec synchronisation différée. Pour les
+commandes et les tâches, la portée écriture est volontairement plus étroite que pour les
+clients/rendez-vous, car elle reflète exactement ce qui existe déjà en ligne :
+- **Commandes** : création hors connexion (id généré sur l'appareil ; la référence séquentielle
+  et la vérification/consommation du stock de tissu ne sont calculées qu'au moment de la
+  synchronisation — la commande affiche "en attente" jusque-là) et changement de statut
+  (transitions validées par la même machine à états que le serveur). Aucune édition de champs
+  ni suppression : ces opérations n'existent pas non plus pour les commandes en ligne.
+- **Tâches** : création (rattachée à une commande) et changement de statut. Aucune suppression
+  (inexistante en ligne également).
+- Les données enrichies affichées uniquement en ligne aujourd'hui (responsable assigné, photos,
+  historique des statuts) ne sont pas dupliquées en local et ne sont donc pas visibles hors
+  connexion — seules les informations réellement stockées localement sont affichées offline.
+
+Les autres modules (tissus, paiements...) restent en ligne uniquement pour l'instant ; ils
+suivront le même mécanisme dans une phase ultérieure. Aucune fonctionnalité offline non listée
+ici n'est présentée comme disponible.
 
 ### Mécanisme
 
 - Base locale **SQLite** (`expo-sqlite`) sur le mobile : une table par entité synchronisable
-  (`customers_local`, `appointments_local`) + une file de mutations (`mutation_queue`) + une
-  table de métadonnées (`sync_meta`, horodatage de dernière synchro).
+  (`customers_local`, `appointments_local`, `orders_local`, `tasks_local`) + une file de
+  mutations (`mutation_queue`) + une table de métadonnées (`sync_meta`, horodatage de dernière
+  synchro).
 - Chaque enregistrement local porte `localUpdatedAt` (dernière modification locale) et
   `serverUpdatedAt` (dernière valeur connue du serveur, utilisée comme base pour la détection
   de conflit).

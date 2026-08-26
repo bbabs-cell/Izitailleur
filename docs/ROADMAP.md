@@ -44,6 +44,9 @@ tests exécutés, résultats, erreurs corrigées, points restants.
       de l'atelier (Aujourd'hui, Urgent, Argent, Stock, Équipe), sections Argent/Équipe masquées
       pour les rôles non autorisés (`canViewFinance`). Écran d'accueil mobile reconstruit pour
       consommer cet endpoint. Tests réels : 92/92 (API) + 30/30 (mobile).
-- [ ] Étendre le mode hors connexion aux commandes et aux tâches (actuellement limité à
-      Clients/Calendrier).
+- [x] **Mode hors connexion étendu aux commandes et aux tâches** : création de commande hors
+      connexion (référence et stock validés à la synchronisation), changement de statut de
+      commande et de tâche hors connexion, conflits détectés et résolubles depuis l'écran
+      Synchronisation. Tests réels : 17/17 (sync e2e, API) + suite complète 100/100 (API),
+      typecheck mobile propre.
 - [ ] Reçus/factures plus poussés (export, personnalisation).

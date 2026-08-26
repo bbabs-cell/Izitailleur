@@ -43,7 +43,7 @@ export class OrdersService {
     return order;
   }
 
-  async create(workshopId: string, dto: CreateOrderDto) {
+  async create(workshopId: string, dto: CreateOrderDto, id?: string) {
     const customer = await this.prisma.customer.findFirst({
       where: { id: dto.customerId, workshopId, deletedAt: null },
     });
@@ -86,6 +86,7 @@ export class OrdersService {
 
       const order = await tx.order.create({
         data: {
+          id,
           workshopId,
           reference,
           customerId: dto.customerId,
@@ -168,10 +169,11 @@ export class OrdersService {
     return this.prisma.orderImage.create({ data: { orderId, url: dto.url } });
   }
 
-  async addTask(workshopId: string, orderId: string, dto: CreateOrderTaskDto) {
+  async addTask(workshopId: string, orderId: string, dto: CreateOrderTaskDto, id?: string) {
     await this.getOrThrow(workshopId, orderId);
     return this.prisma.orderTask.create({
       data: {
+        id,
         orderId,
         title: dto.title,
         description: dto.description,

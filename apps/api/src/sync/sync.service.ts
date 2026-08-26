@@ -2,22 +2,37 @@ import { Injectable } from "@nestjs/common";
 import {
   syncAppointmentDataSchema,
   syncCustomerDataSchema,
+  syncOrderCreateDataSchema,
+  syncOrderUpdateDataSchema,
+  syncTaskCreateDataSchema,
+  syncTaskUpdateDataSchema,
   type PushSyncDto,
   type SyncMutation,
   type SyncMutationResult,
 } from "@izitailleur/shared";
 import { PrismaService } from "../prisma/prisma.service";
+import { OrdersService } from "../orders/orders.service";
 
 @Injectable()
 export class SyncService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly ordersService: OrdersService,
+  ) {}
 
   async pull(workshopId: string, since: Date) {
-    const [customers, appointments] = await Promise.all([
+    const [customers, appointments, orders, tasks] = await Promise.all([
       this.prisma.customer.findMany({ where: { workshopId, updatedAt: { gt: since } } }),
       this.prisma.appointment.findMany({ where: { workshopId, updatedAt: { gt: since } } }),
+      this.prisma.order.findMany({
+        where: { workshopId, updatedAt: { gt: since } },
+        include: { customer: { select: { firstName: true, lastName: true } } },
+      }),
+      this.prisma.orderTask.findMany({
+        where: { order: { workshopId }, updatedAt: { gt: since } },
+      }),
     ]);
-    return { serverTime: new Date().toISOString(), customers, appointments };
+    return { serverTime: new Date().toISOString(), customers, appointments, orders, tasks };
   }
 
   async push(workshopId: string, dto: PushSyncDto): Promise<SyncMutationResult[]> {
@@ -32,7 +47,13 @@ export class SyncService {
     if (mutation.entity === "customer") {
       return this.applyCustomer(workshopId, mutation);
     }
-    return this.applyAppointment(workshopId, mutation);
+    if (mutation.entity === "appointment") {
+      return this.applyAppointment(workshopId, mutation);
+    }
+    if (mutation.entity === "order") {
+      return this.applyOrder(workshopId, mutation);
+    }
+    return this.applyTask(workshopId, mutation);
   }
 
   private async applyCustomer(workshopId: string, mutation: SyncMutation): Promise<SyncMutationResult> {
@@ -133,5 +154,108 @@ export class SyncService {
       },
     });
     return { entity, id, status: "applied", serverRecord: updated };
+  }
+
+  /**
+   * Commandes hors connexion : la création réutilise OrdersService.create (même logique que
+   * l'endpoint POST /orders — génération de référence, vérification/consommation du stock de
+   * tissu). Aucune édition de champs ni suppression : ces opérations n'existent pas non plus
+   * pour les commandes en ligne.
+   */
+  private async applyOrder(workshopId: string, mutation: SyncMutation): Promise<SyncMutationResult> {
+    const { entity, id } = mutation;
+
+    if (mutation.op === "delete") {
+      return { entity, id, status: "error", message: "La suppression de commande n'est pas prise en charge" };
+    }
+
+    if (mutation.op === "create") {
+      const parsed = syncOrderCreateDataSchema.safeParse(mutation.data);
+      if (!parsed.success) {
+        return { entity, id, status: "error", message: "Données commande invalides" };
+      }
+      const existing = await this.prisma.order.findUnique({ where: { id } });
+      if (existing) {
+        return { entity, id, status: "applied", serverRecord: existing };
+      }
+      try {
+        const created = await this.ordersService.create(workshopId, parsed.data, id);
+        return { entity, id, status: "applied", serverRecord: created };
+      } catch (e) {
+        return { entity, id, status: "error", message: e instanceof Error ? e.message : "Création de commande impossible" };
+      }
+    }
+
+    const current = await this.prisma.order.findFirst({ where: { id, workshopId } });
+    if (!current) {
+      return { entity, id, status: "not_found" };
+    }
+    if (current.updatedAt.getTime() > new Date(mutation.baseUpdatedAt).getTime()) {
+      return { entity, id, status: "conflict", serverRecord: current };
+    }
+
+    const parsed = syncOrderUpdateDataSchema.safeParse(mutation.data);
+    if (!parsed.success) {
+      return { entity, id, status: "error", message: "Statut de commande invalide" };
+    }
+    try {
+      const updated = await this.ordersService.updateStatus(workshopId, id, parsed.data.status);
+      return { entity, id, status: "applied", serverRecord: updated };
+    } catch (e) {
+      return { entity, id, status: "error", message: e instanceof Error ? e.message : "Transition de statut impossible" };
+    }
+  }
+
+  /** Tâches : même principe — création (rattachée à une commande) et changement de statut. */
+  private async applyTask(workshopId: string, mutation: SyncMutation): Promise<SyncMutationResult> {
+    const { entity, id } = mutation;
+
+    if (mutation.op === "delete") {
+      return { entity, id, status: "error", message: "La suppression de tâche n'est pas prise en charge" };
+    }
+
+    if (mutation.op === "create") {
+      const parsed = syncTaskCreateDataSchema.safeParse(mutation.data);
+      if (!parsed.success) {
+        return { entity, id, status: "error", message: "Données tâche invalides" };
+      }
+      const existing = await this.prisma.orderTask.findUnique({ where: { id } });
+      if (existing) {
+        return { entity, id, status: "applied", serverRecord: existing };
+      }
+      const { orderId, ...taskData } = parsed.data;
+      try {
+        const created = await this.ordersService.addTask(workshopId, orderId, taskData, id);
+        return { entity, id, status: "applied", serverRecord: created };
+      } catch (e) {
+        return { entity, id, status: "error", message: e instanceof Error ? e.message : "Création de tâche impossible" };
+      }
+    }
+
+    const current = await this.prisma.orderTask.findFirst({
+      where: { id, order: { workshopId } },
+    });
+    if (!current) {
+      return { entity, id, status: "not_found" };
+    }
+    if (current.updatedAt.getTime() > new Date(mutation.baseUpdatedAt).getTime()) {
+      return { entity, id, status: "conflict", serverRecord: current };
+    }
+
+    const parsed = syncTaskUpdateDataSchema.safeParse(mutation.data);
+    if (!parsed.success) {
+      return { entity, id, status: "error", message: "Statut de tâche invalide" };
+    }
+    try {
+      const updated = await this.ordersService.updateTaskStatus(
+        workshopId,
+        current.orderId,
+        id,
+        parsed.data.status,
+      );
+      return { entity, id, status: "applied", serverRecord: updated };
+    } catch (e) {
+      return { entity, id, status: "error", message: e instanceof Error ? e.message : "Changement de statut de tâche impossible" };
+    }
   }
 }
