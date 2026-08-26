@@ -60,3 +60,48 @@ Chaque entité critique porte `createdAt`, `updatedAt`, `deletedAt` (suppression
 
 Ces points seront soumis à validation avant d'être implémentés, conformément à la règle de
 décision du projet (changements profonds = validation requise).
+
+## Mode hors connexion et synchronisation (Phase 5)
+
+### Portée réelle (honnêteté de l'implémentation)
+
+Seuls **Clients** et **Rendez-vous (calendrier)** sont pleinement offline-first à ce stade :
+lecture ET écriture (création, modification pour les clients) fonctionnent sans connexion,
+avec synchronisation différée. Les autres modules (commandes, tâches, tissus, paiements...)
+restent en ligne uniquement pour l'instant ; ils suivront le même mécanisme dans une phase
+ultérieure. Aucune fonctionnalité offline non listée ici n'est présentée comme disponible.
+
+### Mécanisme
+
+- Base locale **SQLite** (`expo-sqlite`) sur le mobile : une table par entité synchronisable
+  (`customers_local`, `appointments_local`) + une file de mutations (`mutation_queue`) + une
+  table de métadonnées (`sync_meta`, horodatage de dernière synchro).
+- Chaque enregistrement local porte `localUpdatedAt` (dernière modification locale) et
+  `serverUpdatedAt` (dernière valeur connue du serveur, utilisée comme base pour la détection
+  de conflit).
+- Écriture : toute création/modification s'écrit **immédiatement en local** (l'utilisateur
+  n'attend jamais le réseau) et empile une mutation dans la file.
+- Synchronisation (`POST /sync/push` puis `GET /sync/pull?since=...`), déclenchée : au retour
+  réseau (écoute `NetInfo`), au retour au premier plan de l'app, et manuellement (écran
+  Synchronisation).
+- **Détection de conflit réelle** : chaque mutation de mise à jour envoie `baseUpdatedAt` (la
+  version sur laquelle l'édition locale s'est basée). Si `updatedAt` du serveur est plus récent
+  que cette base, le serveur refuse la mutation et renvoie sa version actuelle — ce n'est pas
+  un simple "dernier écrit gagne" silencieux.
+- **Résolution de conflit** : présentée à l'utilisateur (écran Synchronisation) avec les deux
+  versions côte à côte ; choix explicite « Garder ma version » (repousse la modification avec
+  la nouvelle base) ou « Utiliser le serveur » (écrase la copie locale).
+- Idempotence : un identifiant est généré côté client (`expo-crypto` `randomUUID`) dès la
+  création, avant toute synchronisation — rejouer une création déjà appliquée ne crée jamais de
+  doublon (testé).
+
+### Ce qui est réellement testé
+
+- API : 9 tests e2e contre PostgreSQL réel, incluant un scénario de conflit à deux appareils
+  (`apps/api/test/sync.e2e-spec.ts`).
+- Mobile : la logique pure de décision (ignorer un pull sur un enregistrement encore modifié
+  localement, actions à prendre après le résultat d'un push, fusion de la file de mutations)
+  est testée unitairement (`apps/mobile/src/__tests__/syncLogic.test.ts`). Le moteur SQLite/
+  réseau complet (`syncEngine.ts`, `SyncContext.tsx`) n'a **pas** pu être exercé par un test
+  automatisé dans cet environnement (pas d'émulateur/appareil disponible) — il doit être vérifié
+  manuellement avant mise en production réelle.

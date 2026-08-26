@@ -5,6 +5,7 @@ import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { customersApi, type CustomerDetail } from "../api/customers";
+import { customersRepo, type LocalCustomer } from "../offline/customersRepo";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE } from "../domain/orderStatus";
 import { colors, spacing, typography } from "../theme/tokens";
 import type { AppStackParamList } from "../navigation/RootNavigator";
@@ -14,14 +15,26 @@ type Props = NativeStackScreenProps<AppStackParamList, "CustomerDetail">;
 export function CustomerDetailScreen({ route, navigation }: Props) {
   const { customerId } = route.params;
   const [customer, setCustomer] = useState<CustomerDetail | null>(null);
+  const [localOnly, setLocalOnly] = useState<LocalCustomer | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       const result = await customersApi.get(customerId);
       setCustomer(result);
+      setLocalOnly(null);
+      setError(null);
     } catch {
-      setError("Impossible de charger ce client.");
+      // Hors connexion, ou client créé localement pas encore synchronisé : on retombe sur
+      // la copie locale plutôt que d'afficher une erreur bloquante.
+      const local = await customersRepo.get(customerId);
+      if (local) {
+        setLocalOnly(local);
+        setCustomer(null);
+        setError(null);
+      } else {
+        setError("Impossible de charger ce client (hors connexion et non trouvé localement).");
+      }
     }
   }, [customerId]);
 
@@ -35,6 +48,27 @@ export function CustomerDetailScreen({ route, navigation }: Props) {
       <View style={styles.container}>
         <Text style={styles.error}>⚠️ {error}</Text>
       </View>
+    );
+  }
+
+  if (localOnly) {
+    return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <Badge
+          label={localOnly.conflict ? "Conflit à résoudre" : "En attente de synchronisation"}
+          tone={localOnly.conflict ? "danger" : "warning"}
+        />
+        <Text style={styles.title}>
+          {localOnly.firstName} {localOnly.lastName}
+        </Text>
+        {localOnly.phone ? <Text style={styles.body}>📞 {localOnly.phone}</Text> : null}
+        {localOnly.address ? <Text style={styles.body}>📍 {localOnly.address}</Text> : null}
+        {localOnly.notes ? <Text style={styles.body}>📝 {localOnly.notes}</Text> : null}
+        <Text style={styles.body}>
+          Les mensurations et commandes de ce client seront disponibles ici une fois la
+          synchronisation effectuée (voir l'écran Synchronisation).
+        </Text>
+      </ScrollView>
     );
   }
 

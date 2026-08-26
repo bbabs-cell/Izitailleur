@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
+import { Button } from "../components/Button";
 import { appointmentsApi, type Appointment } from "../api/appointments";
+import { appointmentsRepo, type LocalAppointment } from "../offline/appointmentsRepo";
+import { useSync } from "../offline/SyncContext";
 import { colors, spacing, typography } from "../theme/tokens";
+import type { AppStackParamList } from "../navigation/RootNavigator";
+
+type Props = NativeStackScreenProps<AppStackParamList, "Calendar">;
 
 const TYPE_LABELS: Record<string, string> = {
   FITTING: "Essayage",
@@ -27,33 +34,55 @@ function endOfRangeIso(daysAhead: number) {
   return end.toISOString();
 }
 
-export function CalendarScreen() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+export function CalendarScreen({ navigation }: Props) {
+  const { status: syncStatus } = useSync();
+  const [appointments, setAppointments] = useState<(Appointment | LocalAppointment)[]>([]);
   const [busyDays, setBusyDays] = useState<{ date: string; count: number }[]>([]);
+  const [offline, setOffline] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+    const from = startOfWeekIso();
+    const to = endOfRangeIso(14);
     try {
-      const result = await appointmentsApi.list(startOfWeekIso(), endOfRangeIso(14));
+      const result = await appointmentsApi.list(from, to);
       setAppointments(result.appointments);
       setBusyDays(result.busyDays);
+      setOffline(false);
     } catch {
-      setError("Impossible de charger le calendrier.");
+      // Hors connexion : on affiche au minimum les rendez-vous connus localement.
+      // La détection de journée chargée nécessite le serveur et n'est pas disponible ici.
+      try {
+        setAppointments(await appointmentsRepo.listInRange(from, to));
+        setBusyDays([]);
+        setOffline(true);
+      } catch {
+        setError("Impossible de charger le calendrier.");
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    const unsubscribe = navigation.addListener("focus", load);
+    return unsubscribe;
+  }, [navigation, load]);
+
+  useEffect(() => {
+    if (syncStatus === "idle") load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncStatus]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Calendrier — 14 prochains jours</Text>
+      {offline ? (
+        <Badge label="Hors connexion — journées chargées non calculées" tone="warning" />
+      ) : null}
 
       {busyDays.length > 0 ? (
         <Card style={styles.busyCard}>
@@ -89,14 +118,17 @@ export function CalendarScreen() {
                 timeStyle: "short",
               })}
             </Text>
-            {item.customer ? (
+            {"customer" in item && item.customer ? (
               <Text style={styles.body}>
                 {item.customer.firstName} {item.customer.lastName}
               </Text>
             ) : null}
+            {"dirty" in item && item.dirty ? <Badge label="Non synchronisé" tone="info" /> : null}
           </Card>
         )}
       />
+
+      <Button label="Nouveau rendez-vous" onPress={() => navigation.navigate("AppointmentForm")} />
     </View>
   );
 }

@@ -2,70 +2,84 @@ import { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
+import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
-import { customersApi, type Customer } from "../api/customers";
+import { customersRepo, type LocalCustomer } from "../offline/customersRepo";
+import { useSync } from "../offline/SyncContext";
 import { colors, spacing, typography } from "../theme/tokens";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Customers">;
 
+function matches(customer: LocalCustomer, query: string): boolean {
+  if (!query.trim()) return true;
+  const needle = query.trim().toLowerCase();
+  return (
+    customer.firstName.toLowerCase().includes(needle) ||
+    customer.lastName.toLowerCase().includes(needle) ||
+    (customer.phone ?? "").includes(needle)
+  );
+}
+
+/**
+ * Source de données : la base SQLite locale (offline-first), tenue à jour par le SyncContext.
+ * Les créations écrivent immédiatement en local, hors connexion comme en ligne.
+ */
 export function CustomersListScreen({ navigation }: Props) {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const { status: syncStatus } = useSync();
+  const [customers, setCustomers] = useState<LocalCustomer[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (query?: string) => {
-    setLoading(true);
-    setError(null);
+  const load = useCallback(async () => {
     try {
-      const results = await customersApi.list(query);
-      setCustomers(results);
+      setCustomers(await customersRepo.list());
+      setError(null);
     } catch {
-      setError("Impossible de charger les clients.");
-    } finally {
-      setLoading(false);
+      setError("Impossible de lire les clients enregistrés localement.");
     }
   }, []);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => load(search));
+    const unsubscribe = navigation.addListener("focus", load);
     return unsubscribe;
-  }, [navigation, load, search]);
+  }, [navigation, load]);
+
+  // Recharge depuis SQLite dès qu'une synchronisation vient de se terminer.
+  useEffect(() => {
+    if (syncStatus === "idle") {
+      load();
+    }
+  }, [syncStatus, load]);
+
+  const filtered = customers.filter((c) => matches(c, search));
 
   return (
     <View style={styles.container}>
-      <TextField
-        label="Rechercher"
-        value={search}
-        onChangeText={(text) => {
-          setSearch(text);
-          load(text);
-        }}
-        placeholder="Nom ou téléphone"
-      />
+      {syncStatus === "offline" ? <Badge label="Hors connexion — données locales" tone="warning" /> : null}
+      <TextField label="Rechercher" value={search} onChangeText={setSearch} placeholder="Nom ou téléphone" />
 
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
 
       <FlatList
-        data={customers}
+        data={filtered}
         keyExtractor={(item) => item.id}
-        refreshing={loading}
-        onRefresh={() => load(search)}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          !loading ? <Text style={styles.empty}>Aucun client pour le moment.</Text> : null
-        }
+        ListEmptyComponent={<Text style={styles.empty}>Aucun client pour le moment.</Text>}
         renderItem={({ item }) => (
           <Pressable
             accessibilityRole="button"
             onPress={() => navigation.navigate("CustomerDetail", { customerId: item.id })}
           >
             <Card style={styles.card}>
-              <Text style={styles.name}>
-                {item.firstName} {item.lastName}
-              </Text>
+              <View style={styles.headerRow}>
+                <Text style={styles.name}>
+                  {item.firstName} {item.lastName}
+                </Text>
+                {item.dirty ? <Badge label="Non synchronisé" tone="info" /> : null}
+                {item.conflict ? <Badge label="Conflit" tone="danger" /> : null}
+              </View>
               {item.phone ? <Text style={styles.phone}>{item.phone}</Text> : null}
             </Card>
           </Pressable>
@@ -90,6 +104,11 @@ const styles = StyleSheet.create({
   },
   card: {
     gap: spacing.xs,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
   },
   name: {
     ...typography.subtitle,

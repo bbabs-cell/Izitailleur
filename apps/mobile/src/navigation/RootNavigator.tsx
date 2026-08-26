@@ -13,6 +13,7 @@ import { OrdersListScreen } from "../screens/OrdersListScreen";
 import { OrderDetailScreen } from "../screens/OrderDetailScreen";
 import { OrderFormScreen } from "../screens/OrderFormScreen";
 import { CalendarScreen } from "../screens/CalendarScreen";
+import { AppointmentFormScreen } from "../screens/AppointmentFormScreen";
 import { TeamListScreen } from "../screens/TeamListScreen";
 import { TeamInviteScreen } from "../screens/TeamInviteScreen";
 import { FabricsListScreen } from "../screens/FabricsListScreen";
@@ -24,6 +25,8 @@ import { IssueFormScreen } from "../screens/IssueFormScreen";
 import { OrderPaymentsScreen } from "../screens/OrderPaymentsScreen";
 import { DebtsScreen } from "../screens/DebtsScreen";
 import { FinanceStatsScreen } from "../screens/FinanceStatsScreen";
+import { SyncStatusScreen } from "../screens/SyncStatusScreen";
+import { SyncProvider } from "../offline/SyncContext";
 import { colors } from "../theme/tokens";
 
 export type AuthStackParamList = {
@@ -41,6 +44,7 @@ export type AppStackParamList = {
   OrderDetail: { orderId: string };
   OrderForm: { customerId?: string };
   Calendar: undefined;
+  AppointmentForm: undefined;
   Team: undefined;
   TeamInvite: undefined;
   Fabrics: undefined;
@@ -52,6 +56,7 @@ export type AppStackParamList = {
   OrderPayments: { orderId: string };
   Debts: undefined;
   FinanceStats: undefined;
+  SyncStatus: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -83,6 +88,7 @@ export function RootNavigator() {
   return (
     <NavigationContainer theme={navTheme}>
       {status === "authenticated" ? (
+        <SyncProvider>
         <AppStack.Navigator screenOptions={{ headerTintColor: colors.textPrimary }}>
           <AppStack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
           <AppStack.Screen name="Customers" component={CustomersListScreen} options={{ title: "Clients" }} />
@@ -109,6 +115,11 @@ export function RootNavigator() {
             options={{ title: "Nouvelle commande" }}
           />
           <AppStack.Screen name="Calendar" component={CalendarScreen} options={{ title: "Calendrier" }} />
+          <AppStack.Screen
+            name="AppointmentForm"
+            component={AppointmentFormScreen}
+            options={{ title: "Nouveau rendez-vous" }}
+          />
           <AppStack.Screen name="Team" component={TeamListScreen} options={{ title: "Équipe" }} />
           <AppStack.Screen
             name="TeamInvite"
@@ -152,7 +163,13 @@ export function RootNavigator() {
             component={FinanceStatsScreen}
             options={{ title: "Statistiques" }}
           />
+          <AppStack.Screen
+            name="SyncStatus"
+            component={SyncStatusScreen}
+            options={{ title: "Synchronisation" }}
+          />
         </AppStack.Navigator>
+        </SyncProvider>
       ) : (
         <AuthStack.Navigator screenOptions={{ headerShown: false }}>
           <AuthStack.Screen name="Login" component={LoginScreen} />

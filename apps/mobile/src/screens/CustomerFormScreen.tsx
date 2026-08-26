@@ -4,8 +4,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { customerSchema } from "@izitailleur/shared";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
-import { customersApi } from "../api/customers";
-import { ApiError } from "../api/client";
+import { customersRepo } from "../offline/customersRepo";
 import { colors, spacing, typography } from "../theme/tokens";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
@@ -35,10 +34,12 @@ export function CustomerFormScreen({ navigation }: Props) {
     }
     setLoading(true);
     try {
-      const customer = await customersApi.create(parsed.data);
-      navigation.replace("CustomerDetail", { customerId: customer.id });
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Impossible de créer le client.");
+      // Écriture locale immédiate (SQLite) — fonctionne même hors connexion.
+      // La synchronisation avec le serveur se fait en arrière-plan (voir SyncContext).
+      await customersRepo.create(parsed.data);
+      navigation.navigate("Customers");
+    } catch {
+      setError("Impossible d'enregistrer ce client sur l'appareil.");
     } finally {
       setLoading(false);
     }

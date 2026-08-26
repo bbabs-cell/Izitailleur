@@ -5,14 +5,29 @@ import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { useAuth } from "../auth/AuthContext";
+import { useSync } from "../offline/SyncContext";
 import { ROLE_LABELS } from "../domain/roles";
 import { colors, spacing, typography } from "../theme/tokens";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Home">;
 
+const SYNC_LABELS: Record<string, string> = {
+  idle: "Synchronisé",
+  syncing: "Synchronisation…",
+  offline: "Hors connexion",
+  error: "Erreur de synchro",
+};
+const SYNC_TONE: Record<string, "success" | "warning" | "danger" | "info"> = {
+  idle: "success",
+  syncing: "info",
+  offline: "warning",
+  error: "danger",
+};
+
 export function HomeScreen({ navigation }: Props) {
   const { user, logout } = useAuth();
+  const { status: syncStatus, pendingCount } = useSync();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -25,6 +40,14 @@ export function HomeScreen({ navigation }: Props) {
           Le tableau de bord complet (urgences, priorités du jour) arrive en Phase 8. En
           attendant, gérez votre atelier ci-dessous.
         </Text>
+      </Card>
+
+      <Card style={styles.card}>
+        <Badge
+          label={`${SYNC_LABELS[syncStatus]}${pendingCount > 0 ? ` (${pendingCount} en attente)` : ""}`}
+          tone={SYNC_TONE[syncStatus]}
+        />
+        <Button label="Synchronisation" variant="secondary" onPress={() => navigation.navigate("SyncStatus")} />
       </Card>
 
       <Button label="Clients" onPress={() => navigation.navigate("Customers")} />
