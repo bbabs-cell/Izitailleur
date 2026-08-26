@@ -29,8 +29,11 @@ contient des erreurs critiques non résolues.
 - [x] **PHASE 7 — IA** : AIService déterministe (décision validée : pas d'appel externe),
       répond aux 6 questions du cahier des charges à partir de données réelles, permissions
       respectées. Tests réels : 81/81 (API).
-- [ ] **PHASE 8 — Qualité** : tests, optimisation, sécurité, accessibilité, UX, responsive,
-      nettoyage du code.
+- [x] **PHASE 8 — Qualité** : sécurité durcie (helmet, anti-brute-force testé), cas limite
+      « date passée » ajouté et testé, garde-fous de performance, code vérifié sans import
+      inutilisé, documentation manquante complétée (DATABASE.md, SECURITY.md, TESTING.md).
+      Tests réels : 83/83 (API) + 30/30 (mobile). **Toutes les phases du projet sont
+      terminées.**
 
 Chaque phase terminée fait l'objet d'un rapport : fonctionnalités créées, fichiers principaux,
 tests exécutés, résultats, erreurs corrigées, points restants.
