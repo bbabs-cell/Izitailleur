@@ -1,4 +1,6 @@
 import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { PrismaModule } from "./prisma/prisma.module";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
@@ -17,6 +19,11 @@ import { AiModule } from "./ai/ai.module";
 
 @Module({
   imports: [
+    // Limites relâchées sous les tests automatisés (nombreuses inscriptions/connexions dans
+    // une même minute depuis la même IP) ; strictes en développement/production.
+    ThrottlerModule.forRoot([
+      { ttl: 60000, limit: process.env.NODE_ENV === "test" ? 100000 : 120 },
+    ]),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -33,5 +40,6 @@ import { AiModule } from "./ai/ai.module";
     NotificationsModule,
     AiModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

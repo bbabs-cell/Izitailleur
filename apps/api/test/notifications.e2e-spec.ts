@@ -68,7 +68,7 @@ describe("Notifications (e2e)", () => {
   });
 
   it("génère une alerte de commande en retard et une alerte de dette", async () => {
-    await request(app.getHttpServer())
+    const orderRes = await request(app.getHttpServer())
       .post("/orders")
       .set("Authorization", `Bearer ${token}`)
       .send({
@@ -76,9 +76,16 @@ describe("Notifications (e2e)", () => {
         modelName: "Costume",
         price: 20000,
         deposit: 5000,
-        dueDate: new Date(Date.now() - 86400000).toISOString(),
+        dueDate: new Date(Date.now() + 86400000).toISOString(),
       })
       .expect(201);
+
+    // La création refuse une date limite passée (voir orders.e2e-spec.ts) ; on simule le
+    // passage du temps en base pour tester la détection du retard.
+    await prisma.order.update({
+      where: { id: orderRes.body.id },
+      data: { dueDate: new Date(Date.now() - 86400000) },
+    });
 
     const res = await request(app.getHttpServer())
       .post("/notifications/scan")

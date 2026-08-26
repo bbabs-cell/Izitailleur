@@ -39,6 +39,20 @@ describe("Orders (e2e)", () => {
       .expect(400);
   });
 
+  it("refuse une commande avec une date limite déjà passée", async () => {
+    const res = await request(app.getHttpServer())
+      .post("/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId,
+        modelName: "Boubou homme",
+        price: 15000,
+        dueDate: new Date(Date.now() - 86400000).toISOString(),
+      })
+      .expect(400);
+    expect(res.body.message).toMatch(/passé/i);
+  });
+
   let orderId: string;
 
   it("crée une commande avec une référence auto-générée", async () => {

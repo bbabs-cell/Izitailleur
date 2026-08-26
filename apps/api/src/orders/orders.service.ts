@@ -21,6 +21,7 @@ export class OrdersService {
       where: { workshopId, deletedAt: null, ...(status ? { status } : {}) },
       include: { customer: true },
       orderBy: { dueDate: "asc" },
+      take: 500,
     });
   }
 
@@ -48,6 +49,13 @@ export class OrdersService {
     });
     if (!customer) {
       throw new BadRequestException("Client introuvable pour cet atelier");
+    }
+
+    const dueDate = new Date(dto.dueDate);
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    if (dueDate.getTime() < startOfToday.getTime()) {
+      throw new BadRequestException("La date limite ne peut pas être dans le passé");
     }
 
     let fabric: { id: string; quantity: number; unit: string } | null = null;

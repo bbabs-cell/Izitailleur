@@ -22,6 +22,7 @@ export class CustomersService {
           : {}),
       },
       orderBy: { createdAt: "desc" },
+      take: 500,
     });
   }
 

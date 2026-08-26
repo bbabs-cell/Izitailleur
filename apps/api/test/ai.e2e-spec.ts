@@ -55,10 +55,18 @@ describe("AI (e2e)", () => {
         customerId,
         modelName: "Robe",
         price: 15000,
-        dueDate: new Date(Date.now() - 86400000).toISOString(),
+        dueDate: new Date(Date.now() + 86400000).toISOString(),
       })
       .expect(201);
     orderReference = orderRes.body.reference;
+
+    // Simule le passage du temps (la date limite est désormais dépassée) : la création via
+    // l'API refuse une date passée (voir orders.e2e-spec.ts), donc on fait vieillir la
+    // commande directement en base, comme le ferait le temps qui passe réellement.
+    await prisma.order.update({
+      where: { id: orderRes.body.id },
+      data: { dueDate: new Date(Date.now() - 86400000) },
+    });
 
     const res = await ask("Quelles sont les commandes en retard ?").expect(201);
     expect(res.body.answer).toContain(`#${orderReference}`);

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { canViewFinance, type AiAnswer, type AiIntent, type Role } from "@izitailleur/shared";
+import { canViewFinance, type AiAnswer, type Role } from "@izitailleur/shared";
 import { PrismaService } from "../prisma/prisma.service";
 
 /**
