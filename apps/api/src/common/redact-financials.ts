@@ -12,3 +12,15 @@ export function redactOrderFinancials<T extends { price: number; deposit: number
   if (canViewFinance(role)) return order;
   return { ...order, price: 0, deposit: 0 };
 }
+
+/**
+ * Le prix d'achat d'un tissu est le coût réel payé au fournisseur (donc la marge de l'atelier) :
+ * même logique que redactOrderFinancials, appliquée à /fabrics.
+ */
+export function redactFabricFinancials<T extends { purchasePrice: number | null }>(
+  fabric: T,
+  role: Role,
+): T {
+  if (canViewFinance(role)) return fabric;
+  return { ...fabric, purchasePrice: null };
+}

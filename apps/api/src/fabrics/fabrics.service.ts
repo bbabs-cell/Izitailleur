@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { CreateFabricMovementDto, FabricDto } from "@izitailleur/shared";
+import type { Role } from "@izitailleur/shared";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { redactFabricFinancials } from "../common/redact-financials";
 
 const LOW_STOCK_THRESHOLD = 5;
 
@@ -12,16 +14,18 @@ export class FabricsService {
     private readonly notifications: NotificationsService,
   ) {}
 
-  async list(workshopId: string) {
+  async list(workshopId: string, role: Role) {
     const fabrics = await this.prisma.fabric.findMany({
       where: { workshopId, deletedAt: null },
       include: { supplier: { select: { id: true, name: true } } },
       orderBy: { name: "asc" },
     });
-    return fabrics.map((fabric) => ({ ...fabric, lowStock: fabric.quantity <= LOW_STOCK_THRESHOLD }));
+    return fabrics.map((fabric) =>
+      redactFabricFinancials({ ...fabric, lowStock: fabric.quantity <= LOW_STOCK_THRESHOLD }, role),
+    );
   }
 
-  async getOrThrow(workshopId: string, id: string) {
+  async getOrThrow(workshopId: string, id: string, role: Role) {
     const fabric = await this.prisma.fabric.findFirst({
       where: { id, workshopId, deletedAt: null },
       include: {
@@ -32,14 +36,14 @@ export class FabricsService {
     if (!fabric) {
       throw new NotFoundException("Tissu introuvable");
     }
-    return fabric;
+    return redactFabricFinancials(fabric, role);
   }
 
   create(workshopId: string, dto: FabricDto) {
     return this.prisma.fabric.create({ data: { ...dto, workshopId } });
   }
 
-  async recordMovement(workshopId: string, fabricId: string, dto: CreateFabricMovementDto) {
+  async recordMovement(workshopId: string, fabricId: string, dto: CreateFabricMovementDto, role: Role) {
     const fabric = await this.prisma.fabric.findFirst({
       where: { id: fabricId, workshopId, deletedAt: null },
     });
@@ -80,14 +84,14 @@ export class FabricsService {
       await this.notifications.resolve(workshopId, "STOCK", fabricId);
     }
 
-    return updated;
+    return redactFabricFinancials(updated, role);
   }
 
-  async lowStock(workshopId: string) {
+  async lowStock(workshopId: string, role: Role) {
     const fabrics = await this.prisma.fabric.findMany({
       where: { workshopId, deletedAt: null, quantity: { lte: LOW_STOCK_THRESHOLD } },
       orderBy: { quantity: "asc" },
     });
-    return fabrics;
+    return fabrics.map((fabric) => redactFabricFinancials(fabric, role));
   }
 }

@@ -120,4 +120,59 @@ describe("Fabrics (e2e)", () => {
     expect(fabricRes.body.quantity).toBe(23);
     expect(fabricRes.body.movements.some((m: { orderId: string | null }) => m.orderId)).toBe(true);
   });
+
+  it("masque le prix d'achat pour un apprenti", async () => {
+    await request(app.getHttpServer())
+      .post(`/fabrics/${fabricId}/movements`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ type: "IN", quantity: 1 })
+      .expect(201);
+
+    const priced = await request(app.getHttpServer())
+      .post("/fabrics")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Wax premium", quantity: 5, purchasePrice: 3000 })
+      .expect(201);
+    expect(priced.body.purchasePrice).toBe(3000);
+
+    const apprenticePhone = `+22179995${Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, "0")}`;
+    await request(app.getHttpServer())
+      .post("/employees")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ fullName: "Apprenti Tissu", phone: apprenticePhone, password: "demo12345", role: "APPRENTICE" })
+      .expect(201);
+    const login = await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ phone: apprenticePhone, password: "demo12345" })
+      .expect(200);
+    const apprenticeToken = login.body.accessToken;
+
+    const list = await request(app.getHttpServer())
+      .get("/fabrics")
+      .set("Authorization", `Bearer ${apprenticeToken}`)
+      .expect(200);
+    expect(list.body.length).toBeGreaterThan(0);
+    expect(list.body.every((f: { purchasePrice: number | null }) => f.purchasePrice === null)).toBe(true);
+
+    const detail = await request(app.getHttpServer())
+      .get(`/fabrics/${priced.body.id}`)
+      .set("Authorization", `Bearer ${apprenticeToken}`)
+      .expect(200);
+    expect(detail.body.purchasePrice).toBeNull();
+
+    const lowStock = await request(app.getHttpServer())
+      .get("/fabrics/low-stock")
+      .set("Authorization", `Bearer ${apprenticeToken}`)
+      .expect(200);
+    expect(lowStock.body.every((f: { purchasePrice: number | null }) => f.purchasePrice === null)).toBe(true);
+
+    const movement = await request(app.getHttpServer())
+      .post(`/fabrics/${priced.body.id}/movements`)
+      .set("Authorization", `Bearer ${apprenticeToken}`)
+      .send({ type: "IN", quantity: 1 })
+      .expect(201);
+    expect(movement.body.purchasePrice).toBeNull();
+  });
 });

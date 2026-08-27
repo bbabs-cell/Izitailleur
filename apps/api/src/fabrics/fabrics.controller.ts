@@ -13,17 +13,17 @@ export class FabricsController {
 
   @Get()
   list(@CurrentUser() user: AuthenticatedUser) {
-    return this.fabricsService.list(user.workshopId);
+    return this.fabricsService.list(user.workshopId, user.role);
   }
 
   @Get("low-stock")
   lowStock(@CurrentUser() user: AuthenticatedUser) {
-    return this.fabricsService.lowStock(user.workshopId);
+    return this.fabricsService.lowStock(user.workshopId, user.role);
   }
 
   @Get(":id")
   get(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string) {
-    return this.fabricsService.getOrThrow(user.workshopId, id);
+    return this.fabricsService.getOrThrow(user.workshopId, id, user.role);
   }
 
   @Post()
@@ -40,6 +40,6 @@ export class FabricsController {
     @Param("id") id: string,
     @Body(new ZodValidationPipe(createFabricMovementSchema)) dto: CreateFabricMovementDto,
   ) {
-    return this.fabricsService.recordMovement(user.workshopId, id, dto);
+    return this.fabricsService.recordMovement(user.workshopId, id, dto, user.role);
   }
 }
