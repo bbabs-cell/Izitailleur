@@ -9,6 +9,7 @@ import { fabricsApi, type FabricDetail } from "../api/fabrics";
 import { ApiError } from "../api/client";
 import { useThemedStyles } from "../theme/useThemedStyles";
 import { useToast } from "../components/ToastContext";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "FabricDetail">;
@@ -21,6 +22,7 @@ const MOVEMENT_LABELS: Record<string, string> = {
 
 export function FabricDetailScreen({ route, navigation }: Props) {
   const { showToast } = useToast();
+  const { t: translate } = useTranslation();
   const { fabricId } = route.params;
   const [fabric, setFabric] = useState<FabricDetail | null>(null);
   const [movementQuantity, setMovementQuantity] = useState("");
@@ -75,7 +77,7 @@ export function FabricDetailScreen({ route, navigation }: Props) {
   if (!fabric) {
     return (
       <View style={styles.container}>
-        <Text style={styles.body}>{error ?? "Chargement…"}</Text>
+        <Text style={styles.body}>{error ?? translate("common.loading")}</Text>
       </View>
     );
   }

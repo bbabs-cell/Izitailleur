@@ -8,11 +8,13 @@ import { Chip } from "../components/Chip";
 import { workshopApi } from "../api/workshop";
 import { ApiError } from "../api/client";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "WorkshopSettings">;
 
 export function WorkshopSettingsScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -93,7 +95,7 @@ export function WorkshopSettingsScreen({ navigation }: Props) {
   if (loading) {
     return (
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.body}>Chargement…</Text>
+        <Text style={styles.body}>{t("common.loading")}</Text>
       </ScrollView>
     );
   }
@@ -140,7 +142,7 @@ export function WorkshopSettingsScreen({ navigation }: Props) {
       </View>
 
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
-      <Button label="Enregistrer" onPress={handleSave} loading={saving} />
+      <Button label={t("common.save")} onPress={handleSave} loading={saving} />
     </ScrollView>
   );
 }

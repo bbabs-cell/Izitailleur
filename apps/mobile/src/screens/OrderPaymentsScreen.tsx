@@ -13,12 +13,14 @@ import { ApiError } from "../api/client";
 import { PAYMENT_METHOD_LABELS, formatFcfa } from "../domain/payments";
 import { useThemedStyles } from "../theme/useThemedStyles";
 import { useToast } from "../components/ToastContext";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "OrderPayments">;
 
 export function OrderPaymentsScreen({ route, navigation }: Props) {
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const { orderId } = route.params;
   const [data, setData] = useState<OrderPayments | null>(null);
   const [amount, setAmount] = useState("");
@@ -93,7 +95,7 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
   if (!data) {
     return (
       <View style={styles.container}>
-        <Text style={styles.body}>{error ?? "Chargement…"}</Text>
+        <Text style={styles.body}>{error ?? t("common.loading")}</Text>
       </View>
     );
   }

@@ -6,6 +6,7 @@ import { Button } from "../components/Button";
 import { financeApi, type FinanceStats } from "../api/finance";
 import { formatFcfa } from "../domain/payments";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "FinanceStats">;
@@ -35,6 +36,7 @@ export function FinanceStatsScreen({ navigation }: Props) {
   const [stats, setStats] = useState<FinanceStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const { t: translate } = useTranslation();
   const styles = useThemedStyles((t) => ({
     container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
     grid: { flexDirection: "row", flexWrap: "wrap", gap: t.spacing.sm },
@@ -75,7 +77,7 @@ export function FinanceStatsScreen({ navigation }: Props) {
   if (!stats) {
     return (
       <View style={styles.container}>
-        <Text style={styles.body}>{error ?? "Chargement…"}</Text>
+        <Text style={styles.body}>{error ?? translate("common.loading")}</Text>
       </View>
     );
   }

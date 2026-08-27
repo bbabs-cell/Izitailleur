@@ -10,6 +10,7 @@ import { ordersRepo, type LocalOrder } from "../offline/ordersRepo";
 import { useSync } from "../offline/SyncContext";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE, isOrderLate } from "../domain/orderStatus";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 import type { OrderStatus } from "@izitailleur/shared";
 
@@ -31,6 +32,7 @@ const FILTERS: { key: "all" | "late" | OrderStatus; label: string }[] = [
  */
 export function OrdersListScreen({ navigation }: Props) {
   const { status: syncStatus } = useSync();
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<LocalOrder[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
@@ -72,7 +74,7 @@ export function OrdersListScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      {syncStatus === "offline" ? <Badge label="Hors connexion — données locales" tone="warning" /> : null}
+      {syncStatus === "offline" ? <Badge label={t("common.offline")} tone="warning" /> : null}
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
 
       <View style={styles.filters}>
@@ -117,8 +119,8 @@ export function OrdersListScreen({ navigation }: Props) {
                 </Text>
                 <View style={styles.headerRow}>
                   {late ? <Badge label="En retard" tone="danger" /> : null}
-                  {item.dirty ? <Badge label="Non synchronisé" tone="info" /> : null}
-                  {item.conflict ? <Badge label="Conflit" tone="danger" /> : null}
+                  {item.dirty ? <Badge label={t("common.unsynced")} tone="info" /> : null}
+                  {item.conflict ? <Badge label={t("common.conflict")} tone="danger" /> : null}
                 </View>
               </Card>
             </Pressable>

@@ -7,11 +7,13 @@ import { TextField } from "../components/TextField";
 import { modelsApi } from "../api/models";
 import { ApiError } from "../api/client";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "ModelForm">;
 
 export function ModelFormScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
@@ -55,7 +57,7 @@ export function ModelFormScreen({ navigation }: Props) {
       <TextField label="Description" value={description} onChangeText={setDescription} multiline />
       <TextField label="Prix de base (FCFA)" value={basePrice} onChangeText={setBasePrice} keyboardType="numeric" />
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
-      <Button label="Enregistrer" onPress={handleSubmit} loading={loading} />
+      <Button label={t("common.save")} onPress={handleSubmit} loading={loading} />
     </ScrollView>
   );
 }

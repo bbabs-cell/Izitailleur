@@ -8,6 +8,7 @@ import { Badge } from "../components/Badge";
 import { appointmentsRepo } from "../offline/appointmentsRepo";
 import { customersRepo, type LocalCustomer } from "../offline/customersRepo";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "AppointmentForm">;
@@ -29,6 +30,7 @@ function addDaysIso(days: number) {
 }
 
 export function AppointmentFormScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [type, setType] = useState<AppointmentType>("FITTING");
   const [daysAhead, setDaysAhead] = useState("1");
@@ -110,7 +112,7 @@ export function AppointmentFormScreen({ navigation }: Props) {
       />
 
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
-      <Button label="Enregistrer" onPress={handleSubmit} loading={loading} />
+      <Button label={t("common.save")} onPress={handleSubmit} loading={loading} />
     </ScrollView>
   );
 }

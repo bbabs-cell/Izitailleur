@@ -9,6 +9,7 @@ import { EmptyState } from "../components/EmptyState";
 import { customersRepo, type LocalCustomer } from "../offline/customersRepo";
 import { useSync } from "../offline/SyncContext";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Customers">;
@@ -29,6 +30,7 @@ function matches(customer: LocalCustomer, query: string): boolean {
  */
 export function CustomersListScreen({ navigation }: Props) {
   const { status: syncStatus } = useSync();
+  const { t } = useTranslation();
   const [customers, setCustomers] = useState<LocalCustomer[]>([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export function CustomersListScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      {syncStatus === "offline" ? <Badge label="Hors connexion — données locales" tone="warning" /> : null}
+      {syncStatus === "offline" ? <Badge label={t("common.offline")} tone="warning" /> : null}
       <TextField label="Rechercher" value={search} onChangeText={setSearch} placeholder="Nom ou téléphone" />
 
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
@@ -92,8 +94,8 @@ export function CustomersListScreen({ navigation }: Props) {
                 <Text style={styles.name}>
                   {item.firstName} {item.lastName}
                 </Text>
-                {item.dirty ? <Badge label="Non synchronisé" tone="info" /> : null}
-                {item.conflict ? <Badge label="Conflit" tone="danger" /> : null}
+                {item.dirty ? <Badge label={t("common.unsynced")} tone="info" /> : null}
+                {item.conflict ? <Badge label={t("common.conflict")} tone="danger" /> : null}
               </View>
               {item.phone ? <Text style={styles.phone}>{item.phone}</Text> : null}
             </Card>

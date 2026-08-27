@@ -6,12 +6,14 @@ import { Button } from "../components/Button";
 import { formatFcfa, PAYMENT_METHOD_LABELS } from "../domain/payments";
 import { receiptsApi, type ReceiptDetail } from "../api/receipts";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 import type { PaymentMethod } from "@izitailleur/shared";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Receipt">;
 
 export function ReceiptScreen({ route }: Props) {
+  const { t } = useTranslation();
   const { receiptId } = route.params;
   const [receipt, setReceipt] = useState<ReceiptDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export function ReceiptScreen({ route }: Props) {
   if (!receipt) {
     return (
       <View style={styles.container}>
-        <Text style={error ? styles.error : styles.body}>{error ?? "Chargement…"}</Text>
+        <Text style={error ? styles.error : styles.body}>{error ?? t("common.loading")}</Text>
       </View>
     );
   }

@@ -8,6 +8,7 @@ import { customersApi } from "../api/customers";
 import { workshopApi } from "../api/workshop";
 import { ApiError } from "../api/client";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "MeasurementProfileForm">;
@@ -24,6 +25,7 @@ const FALLBACK_FIELDS = [
 ];
 
 export function MeasurementProfileFormScreen({ route, navigation }: Props) {
+  const { t } = useTranslation();
   const { customerId } = route.params;
   const [label, setLabel] = useState("");
   const [values, setValues] = useState<Record<string, string>>({});
@@ -133,7 +135,7 @@ export function MeasurementProfileFormScreen({ route, navigation }: Props) {
             placeholder="ex : tour de poignet"
           />
         </View>
-        <Button label="Ajouter" variant="secondary" onPress={addCustomField} />
+        <Button label={t("common.add")} variant="secondary" onPress={addCustomField} />
       </View>
 
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}

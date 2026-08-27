@@ -22,6 +22,7 @@ import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE, isOrderLate } from "../domain/o
 import { useAuth } from "../auth/AuthContext";
 import { useThemedStyles } from "../theme/useThemedStyles";
 import { useToast } from "../components/ToastContext";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "OrderDetail">;
@@ -34,6 +35,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
   const { user } = useAuth();
   const { status: syncStatus } = useSync();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const { orderId } = route.params;
   const [order, setOrder] = useState<LocalOrder | null>(null);
   const [tasks, setTasks] = useState<LocalTask[]>([]);
@@ -188,7 +190,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
         <Badge label={ORDER_STATUS_LABELS[status]} tone={ORDER_STATUS_TONE[status]} />
       </View>
       {late ? <Badge label="Urgent — en retard" tone="danger" /> : null}
-      {order.dirty ? <Badge label="Non synchronisé" tone="info" /> : null}
+      {order.dirty ? <Badge label={t("common.unsynced")} tone="info" /> : null}
       {order.conflict ? <Badge label="Conflit à résoudre (voir Synchronisation)" tone="danger" /> : null}
 
       <Card style={styles.card}>
@@ -259,7 +261,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
               <Text style={[styles.body, task.status === "DONE" ? styles.taskDone : null]}>
                 {task.title}
               </Text>
-              {task.dirty ? <Badge label="Non synchronisé" tone="info" /> : null}
+              {task.dirty ? <Badge label={t("common.unsynced")} tone="info" /> : null}
             </Card>
           </Pressable>
         ))

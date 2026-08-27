@@ -7,11 +7,13 @@ import { TextField } from "../components/TextField";
 import { fabricsApi } from "../api/fabrics";
 import { ApiError } from "../api/client";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "FabricForm">;
 
 export function FabricFormScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [color, setColor] = useState("");
   const [quantity, setQuantity] = useState("0");
@@ -58,7 +60,7 @@ export function FabricFormScreen({ navigation }: Props) {
       <TextField label="Unité" value={unit} onChangeText={setUnit} placeholder="m" />
       <TextField label="Emplacement" value={location} onChangeText={setLocation} />
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
-      <Button label="Enregistrer" onPress={handleSubmit} loading={loading} />
+      <Button label={t("common.save")} onPress={handleSubmit} loading={loading} />
     </ScrollView>
   );
 }

@@ -9,11 +9,13 @@ import { EmptyState } from "../components/EmptyState";
 import { suppliersApi, type Supplier } from "../api/suppliers";
 import { ApiError } from "../api/client";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Suppliers">;
 
 export function SuppliersListScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -68,7 +70,7 @@ export function SuppliersListScreen({ navigation }: Props) {
         <TextField label="Nom du fournisseur" value={name} onChangeText={setName} />
         <TextField label="Téléphone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
         {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
-        <Button label="Ajouter" onPress={handleAdd} loading={loading} />
+        <Button label={t("common.add")} onPress={handleAdd} loading={loading} />
       </Card>
 
       <FlatList

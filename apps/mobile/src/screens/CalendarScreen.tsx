@@ -9,6 +9,7 @@ import { appointmentsApi, type Appointment } from "../api/appointments";
 import { appointmentsRepo, type LocalAppointment } from "../offline/appointmentsRepo";
 import { useSync } from "../offline/SyncContext";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Calendar">;
@@ -37,6 +38,7 @@ function endOfRangeIso(daysAhead: number) {
 
 export function CalendarScreen({ navigation }: Props) {
   const { status: syncStatus } = useSync();
+  const { t } = useTranslation();
   const [appointments, setAppointments] = useState<(Appointment | LocalAppointment)[]>([]);
   const [busyDays, setBusyDays] = useState<{ date: string; count: number }[]>([]);
   const [offline, setOffline] = useState(false);
@@ -137,7 +139,7 @@ export function CalendarScreen({ navigation }: Props) {
                 {item.customer.firstName} {item.customer.lastName}
               </Text>
             ) : null}
-            {"dirty" in item && item.dirty ? <Badge label="Non synchronisé" tone="info" /> : null}
+            {"dirty" in item && item.dirty ? <Badge label={t("common.unsynced")} tone="info" /> : null}
           </Card>
         )}
       />

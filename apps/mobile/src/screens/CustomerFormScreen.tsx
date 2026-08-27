@@ -6,11 +6,13 @@ import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { customersRepo } from "../offline/customersRepo";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "CustomerForm">;
 
 export function CustomerFormScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
@@ -59,7 +61,7 @@ export function CustomerFormScreen({ navigation }: Props) {
       <TextField label="Adresse" value={address} onChangeText={setAddress} />
       <TextField label="Notes" value={notes} onChangeText={setNotes} multiline />
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
-      <Button label="Enregistrer" onPress={handleSubmit} loading={loading} testID="customer-submit" />
+      <Button label={t("common.save")} onPress={handleSubmit} loading={loading} testID="customer-submit" />
     </ScrollView>
   );
 }
