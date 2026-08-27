@@ -11,6 +11,7 @@ import { AppointmentsModule } from "./appointments/appointments.module";
 import { EmployeesModule } from "./employees/employees.module";
 import { FabricsModule } from "./fabrics/fabrics.module";
 import { SuppliersModule } from "./suppliers/suppliers.module";
+import { ModelsModule } from "./models/models.module";
 import { IssuesModule } from "./issues/issues.module";
 import { PaymentsModule } from "./payments/payments.module";
 import { FinanceModule } from "./finance/finance.module";
@@ -46,6 +47,7 @@ import { UploadsModule } from "./uploads/uploads.module";
     EmployeesModule,
     FabricsModule,
     SuppliersModule,
+    ModelsModule,
     IssuesModule,
     PaymentsModule,
     FinanceModule,

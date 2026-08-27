@@ -12,3 +12,4 @@ export * from "./notification.schemas";
 export * from "./ai.schemas";
 export * from "./dashboard.schemas";
 export * from "./workshop.schemas";
+export * from "./model.schemas";

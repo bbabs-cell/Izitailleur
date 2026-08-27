@@ -43,7 +43,7 @@ export function OrderFormScreen({ route, navigation }: Props) {
   const [step, setStep] = useState(0);
   const [customerId, setCustomerId] = useState(preselectedCustomerId ?? "");
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [modelName, setModelName] = useState("");
+  const [modelName, setModelName] = useState(route.params?.modelName ?? "");
   const [fabricDescription, setFabricDescription] = useState("");
   const [price, setPrice] = useState("");
   const [deposit, setDeposit] = useState("");

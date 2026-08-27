@@ -31,6 +31,9 @@ import { WorkshopSettingsScreen } from "../screens/WorkshopSettingsScreen";
 import { SearchScreen } from "../screens/SearchScreen";
 import { ReceiptScreen } from "../screens/ReceiptScreen";
 import { SubscriptionScreen } from "../screens/SubscriptionScreen";
+import { ModelsListScreen } from "../screens/ModelsListScreen";
+import { ModelFormScreen } from "../screens/ModelFormScreen";
+import { ModelDetailScreen } from "../screens/ModelDetailScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import { SplashScreen } from "../screens/SplashScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
@@ -60,7 +63,7 @@ export type AppStackParamList = {
   MeasurementProfileForm: { customerId: string };
   Orders: undefined;
   OrderDetail: { orderId: string };
-  OrderForm: { customerId?: string };
+  OrderForm: { customerId?: string; modelName?: string };
   Calendar: undefined;
   AppointmentForm: undefined;
   Team: undefined;
@@ -83,6 +86,9 @@ export type AppStackParamList = {
   Search: undefined;
   Settings: undefined;
   Subscription: undefined;
+  Models: undefined;
+  ModelForm: undefined;
+  ModelDetail: { modelId: string };
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -239,6 +245,17 @@ export function RootNavigator() {
               name="Subscription"
               component={SubscriptionScreen}
               options={{ title: "Abonnement" }}
+            />
+            <AppStack.Screen name="Models" component={ModelsListScreen} options={{ title: "Modèles" }} />
+            <AppStack.Screen
+              name="ModelForm"
+              component={ModelFormScreen}
+              options={{ title: "Nouveau modèle" }}
+            />
+            <AppStack.Screen
+              name="ModelDetail"
+              component={ModelDetailScreen}
+              options={{ title: "Modèle" }}
             />
           </AppStack.Navigator>
         </SyncProvider>

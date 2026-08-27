@@ -29,6 +29,7 @@ export function MoreScreen({ navigation }: Props) {
       title: t("more.workshop"),
       items: [
         { label: "Équipe", icon: "people-outline", onPress: () => navigation.navigate("Team") },
+        { label: "Modèles", icon: "shirt-outline", onPress: () => navigation.navigate("Models") },
         { label: "Tissus", icon: "color-palette-outline", onPress: () => navigation.navigate("Fabrics") },
         { label: "Fournisseurs", icon: "cube-outline", onPress: () => navigation.navigate("Suppliers") },
         {

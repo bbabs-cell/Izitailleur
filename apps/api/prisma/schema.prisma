@@ -40,6 +40,7 @@ model Workshop {
   payments      Payment[]
   receipts      Receipt[]
   notifications Notification[]
+  models        GarmentModel[]
 }
 
 model User {
@@ -261,6 +262,22 @@ model Supplier {
   deletedAt  DateTime?
 
   fabrics Fabric[]
+
+  @@index([workshopId])
+}
+
+model GarmentModel {
+  id           String    @id @default(uuid())
+  workshopId   String
+  workshop     Workshop  @relation(fields: [workshopId], references: [id])
+  name         String
+  category     String?
+  description  String?
+  referenceImageUrl String?
+  basePrice    Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 
   @@index([workshopId])
 }
