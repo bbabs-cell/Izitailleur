@@ -12,20 +12,6 @@
     "api:start": "pnpm build:shared && pnpm --filter @izitailleur/api build && node apps/api/dist/src/main.js",
     "api:test": "pnpm build:shared && pnpm --filter @izitailleur/api test",
     "mobile:start": "pnpm build:shared && pnpm --filter @izitailleur/mobile start",
-    "lint": "pnpm -r lint",
-    "eas-build-pre-install": "pnpm config set minimum-release-age 0"
-  },
-  "pnpm": {
-    "minimumReleaseAge": 0,
-    "overrides": {
-      "@aws-sdk/client-s3": "3.1117.0",
-      "@aws-sdk/s3-request-presigner": "3.1117.0",
-      "@vercel/node": "7.0.0",
-      "@vercel/build-utils": "14.4.0",
-      "@vercel/static-config": "3.4.1",
-      "@ungap/structured-clone": "1.3.3",
-      "terser": "5.50.0",
-      "expo-image-picker": "57.0.13"
-    }
+    "lint": "pnpm -r lint"
   }
 }

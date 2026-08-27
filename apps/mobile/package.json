@@ -36,8 +36,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test": "jest",
-    "eas-build-pre-install": "pnpm config set minimum-release-age 0"
+    "test": "jest"
   },
   "jest": {
     "preset": "jest-expo"
