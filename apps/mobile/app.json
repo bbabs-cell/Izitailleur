@@ -17,7 +17,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,6 +33,11 @@
           "cameraPermission": "Izitailleur a besoin d'accéder à l'appareil photo pour photographier les commandes."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1005935c-f78f-4a33-bdf3-e587fef783ba"
+      }
+    }
   }
 }
