@@ -72,6 +72,12 @@ export function MoreScreen({ navigation }: Props) {
           onPress: () => navigation.navigate("WorkshopSettings"),
           visible: isAdmin,
         },
+        {
+          label: "Abonnement",
+          icon: "card-outline",
+          onPress: () => navigation.navigate("Subscription"),
+          visible: isAdmin,
+        },
         { label: "Apparence & langue", icon: "color-wand-outline", onPress: () => navigation.navigate("Settings") },
       ],
     },

@@ -30,6 +30,7 @@ import { AssistantScreen } from "../screens/AssistantScreen";
 import { WorkshopSettingsScreen } from "../screens/WorkshopSettingsScreen";
 import { SearchScreen } from "../screens/SearchScreen";
 import { ReceiptScreen } from "../screens/ReceiptScreen";
+import { SubscriptionScreen } from "../screens/SubscriptionScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import { SplashScreen } from "../screens/SplashScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
@@ -81,6 +82,7 @@ export type AppStackParamList = {
   More: undefined;
   Search: undefined;
   Settings: undefined;
+  Subscription: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -232,6 +234,11 @@ export function RootNavigator() {
               name="Settings"
               component={SettingsScreen}
               options={{ title: "Apparence & langue" }}
+            />
+            <AppStack.Screen
+              name="Subscription"
+              component={SubscriptionScreen}
+              options={{ title: "Abonnement" }}
             />
           </AppStack.Navigator>
         </SyncProvider>
