@@ -12,11 +12,13 @@ import { ordersRepo } from "../offline/ordersRepo";
 import { ApiError } from "../api/client";
 import { PAYMENT_METHOD_LABELS, formatFcfa } from "../domain/payments";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useToast } from "../components/ToastContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "OrderPayments">;
 
 export function OrderPaymentsScreen({ route, navigation }: Props) {
+  const { showToast } = useToast();
   const { orderId } = route.params;
   const [data, setData] = useState<OrderPayments | null>(null);
   const [amount, setAmount] = useState("");
@@ -67,6 +69,7 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
       await paymentsApi.create(orderId, parsed.data);
       setAmount("");
       await load();
+      showToast("Paiement enregistré", "success");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Paiement impossible.");
     } finally {

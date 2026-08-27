@@ -9,6 +9,7 @@ import { employeesApi } from "../api/employees";
 import { ApiError } from "../api/client";
 import { ROLE_LABELS } from "../domain/roles";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useToast } from "../components/ToastContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "TeamInvite">;
@@ -16,6 +17,7 @@ type Props = NativeStackScreenProps<AppStackParamList, "TeamInvite">;
 const INVITABLE_ROLES = ROLES.filter((role) => role !== "OWNER");
 
 export function TeamInviteScreen({ navigation }: Props) {
+  const { showToast } = useToast();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -40,6 +42,7 @@ export function TeamInviteScreen({ navigation }: Props) {
     setLoading(true);
     try {
       await employeesApi.invite(parsed.data);
+      showToast("Invitation envoyée", "success");
       navigation.goBack();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Impossible d'inviter ce membre.");

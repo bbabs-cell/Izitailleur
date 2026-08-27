@@ -21,6 +21,7 @@ import { ApiError } from "../api/client";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE, isOrderLate } from "../domain/orderStatus";
 import { useAuth } from "../auth/AuthContext";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useToast } from "../components/ToastContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "OrderDetail">;
@@ -32,6 +33,7 @@ type Props = NativeStackScreenProps<AppStackParamList, "OrderDetail">;
 export function OrderDetailScreen({ route, navigation }: Props) {
   const { user } = useAuth();
   const { status: syncStatus } = useSync();
+  const { showToast } = useToast();
   const { orderId } = route.params;
   const [order, setOrder] = useState<LocalOrder | null>(null);
   const [tasks, setTasks] = useState<LocalTask[]>([]);
@@ -100,6 +102,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
     try {
       await ordersRepo.updateStatus(order.id, status);
       await load();
+      showToast(`Statut mis à jour : ${ORDER_STATUS_LABELS[status]}`, "success");
     } catch {
       setError("Impossible d'enregistrer ce changement de statut sur l'appareil.");
     } finally {
@@ -135,6 +138,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
       }
       await orderImagesApi.attach(orderId, publicUrl);
       setImages(await orderImagesApi.list(orderId));
+      showToast("Photo ajoutée", "success");
     } catch (e) {
       setImagesError(
         e instanceof ApiError && e.status === 503

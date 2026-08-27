@@ -8,6 +8,7 @@ import { TextField } from "../components/TextField";
 import { fabricsApi, type FabricDetail } from "../api/fabrics";
 import { ApiError } from "../api/client";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useToast } from "../components/ToastContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "FabricDetail">;
@@ -19,6 +20,7 @@ const MOVEMENT_LABELS: Record<string, string> = {
 };
 
 export function FabricDetailScreen({ route, navigation }: Props) {
+  const { showToast } = useToast();
   const { fabricId } = route.params;
   const [fabric, setFabric] = useState<FabricDetail | null>(null);
   const [movementQuantity, setMovementQuantity] = useState("");
@@ -62,6 +64,7 @@ export function FabricDetailScreen({ route, navigation }: Props) {
       await fabricsApi.recordMovement(fabricId, { type, quantity });
       setMovementQuantity("");
       await load();
+      showToast(type === "IN" ? "Entrée de stock enregistrée" : "Sortie de stock enregistrée", "success");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Mouvement de stock impossible.");
     } finally {

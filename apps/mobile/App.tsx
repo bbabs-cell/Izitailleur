@@ -3,6 +3,7 @@ import { AuthProvider } from "./src/auth/AuthContext";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { ThemeProvider } from "./src/theme/ThemeContext";
 import { I18nProvider } from "./src/i18n/I18nContext";
+import { ToastProvider } from "./src/components/ToastContext";
 
 export default function App() {
   return (
@@ -10,7 +11,9 @@ export default function App() {
       <I18nProvider>
         <SafeAreaProvider>
           <AuthProvider>
-            <RootNavigator />
+            <ToastProvider>
+              <RootNavigator />
+            </ToastProvider>
           </AuthProvider>
         </SafeAreaProvider>
       </I18nProvider>

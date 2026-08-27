@@ -9,12 +9,14 @@ import { issuesApi, type Issue } from "../api/issues";
 import { ISSUE_CATEGORY_LABELS, ISSUE_STATUS_LABELS } from "../domain/issues";
 import { ApiError } from "../api/client";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useToast } from "../components/ToastContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 import type { IssueCategory } from "@izitailleur/shared";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Issues">;
 
 export function IssuesListScreen({ navigation }: Props) {
+  const { showToast } = useToast();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +52,7 @@ export function IssuesListScreen({ navigation }: Props) {
     try {
       await issuesApi.updateStatus(id, "RESOLVED", "Résolu depuis l'application");
       await load();
+      showToast("Problème marqué comme résolu", "success");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Impossible de résoudre ce problème.");
     }
