@@ -71,3 +71,25 @@ tests exécutés, résultats, erreurs corrigées, points restants.
       Voir docs/DEPLOYMENT.md pour la marche à suivre détaillée et les pièges rencontrés.
       Les quatre décisions d'infrastructure (hébergement, sauvegardes, stockage des photos,
       secrets) sont en place et vérifiées.
+- [x] **Refonte complète UI/UX mobile (27/08/2026)** : nouveau système de design (palette
+      colorée indigo/turquoise, thème clair/sombre/auto — le clair n'est jamais blanc pur),
+      navigation par onglets (Accueil/Commandes/Calendrier/Clients/Plus) remplaçant la pile
+      unique, Splash + Onboarding, recherche globale, architecture i18n (FR complet, EN en
+      place, sélecteur fonctionnel), écran de reçu dédié, wizard de création de commande en
+      9 étapes, écran Abonnement (architecture seule, aucun paiement simulé), bibliothèque de
+      modèles/patrons (nouvelle entité `GarmentModel`, full-stack), personnalisation des types
+      de mesures par atelier (`Workshop.measurementFields`, full-stack), micro-interactions
+      (Toast + retour haptique), squelettes de chargement, `ConfirmDialog` (confirmation avant
+      déconnexion), passe d'accessibilité (rôles/labels sur tous les éléments tactiles). Les 26
+      écrans existants migrés sur le nouveau thème. Deux migrations Prisma (`add_garment_model`,
+      `add_workshop_measurement_fields`) déployées en production et vérifiées.
+- [x] **Audit de sécurité RBAC (27/08/2026)** : deux fuites réelles de données financières vers
+      les rôles sans accès finance (ex. apprenti) trouvées et corrigées — `GET /orders`,
+      `GET /orders/:id` et `GET /sync/pull` renvoyaient `price`/`deposit` de chaque commande sans
+      filtrage par rôle ; `GET /fabrics`, `GET /fabrics/:id`, `GET /fabrics/low-stock` et
+      `POST /fabrics/:id/movements` renvoyaient `purchasePrice` (coût fournisseur, donc la marge
+      de l'atelier) de la même façon. Corrigé via `redactOrderFinancials`/`redactFabricFinancials`
+      (`apps/api/src/common/redact-financials.ts`), avec tests de non-régression e2e vérifiant
+      qu'un apprenti reçoit bien des valeurs nulles sur ces chemins. Reste du schéma audité :
+      aucune autre fuite du même type trouvée (paiements/reçus/factures/finances déjà
+      correctement verrouillés par rôle).

@@ -110,15 +110,56 @@ repli par défaut sur `http://10.0.2.2:3000` pour le développement local en ém
 `apps/mobile/eas.json` définit trois profils de build :
 - **development** : pas de variable définie, utilise le repli local (API tournant sur votre
   machine) — pour le développement au quotidien.
-- **preview** et **production** : `EXPO_PUBLIC_API_URL` pointe vers l'API Vercel réelle
-  (`https://api-puce-omega-36.vercel.app`).
+- **preview** : `android.buildType: "apk"` — produit un `.apk` installable directement (par lien
+  ou QR code), sans passer par un store. C'est le profil utilisé pour tester une nouvelle version
+  sur un téléphone Android.
+- **production** : produit un `.aab` (format attendu par le Play Store), `autoIncrement: true`.
 
-**Ce qui reste à faire (nécessite votre compte Expo, non disponible dans cet environnement)** :
-1. `npm install -g eas-cli` puis `eas login` (compte Expo — gratuit, à créer si besoin).
-2. Depuis `apps/mobile/`, lancer `eas build:configure` — ça relie le projet à votre compte Expo
-   et ajoute automatiquement un `projectId` réel dans `app.json` (absent pour l'instant).
-3. `eas build --platform android --profile production` (ou `ios`) pour lancer un vrai build
-   installable, avec `EXPO_PUBLIC_API_URL` déjà pointé vers la production.
+Les deux derniers profils pointent `EXPO_PUBLIC_API_URL` vers l'API Vercel réelle
+(`https://api-puce-omega-36.vercel.app`).
 
-La distribution finale (Play Store, App Store, ou installation directe de l'APK) est une décision
-séparée, non traitée ici.
+**Statut réel** : le compte Expo (`@babsdiong`) est lié, `app.json` contient un `projectId` réel,
+et plusieurs builds preview ont été produits et installés avec succès sur un téléphone Android via
+`eas build --platform android --profile preview`.
+
+**Important — aucune mise à jour "par-dessus" (OTA)** : ce projet n'a pas `expo-updates`
+configuré. Chaque changement de code mobile (nouvel écran, correction, etc.) nécessite un nouveau
+`eas build` complet et une réinstallation de l'APK sur le téléphone — mettre à jour uniquement
+l'API (migrations, corrections backend) ne suffit jamais à faire apparaître un changement
+d'interface sur un appareil déjà installé.
+
+### Pièges rencontrés en configurant EAS Build (résolus)
+
+EAS Build tourne sur ses propres machines dans le cloud, avec sa propre version de pnpm/Node —
+plusieurs choses qui fonctionnaient en local ont échoué sur EAS avant d'être corrigées :
+
+1. **`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`** — la politique de sécurité anti-supply-chain de
+   pnpm (packages trop récents refusés) doit être désactivée via `minimumReleaseAge: 0` dans
+   `pnpm-workspace.yaml` **à la racine du dépôt**, seul emplacement lu de façon fiable par la
+   version de pnpm utilisée par EAS (le champ `"pnpm"` de `package.json` et `.npmrc` sont
+   silencieusement ignorés par cette version).
+2. **`ERR_PNPM_IGNORED_BUILDS`** — les scripts natifs post-install (esbuild, argon2, prisma, …)
+   doivent être explicitement autorisés via `allowBuilds` (nouveau format, dans
+   `pnpm-workspace.yaml`) — l'ancien format `onlyBuiltDependencies` est ignoré par cette même
+   version de pnpm.
+3. **`@izitailleur/shared` non compilé au moment du bundle Metro** — EAS Build ne lance pas notre
+   script `build:shared` personnalisé. Corrigé avec un hook
+   `"eas-build-post-install": "pnpm --filter @izitailleur/shared build"` dans
+   `apps/mobile/package.json` (doit être défini là, pas à la racine du monorepo, pour être
+   fiablement exécuté par EAS).
+4. **`babel-preset-expo` introuvable** — n'était qu'une dépendance transitive ; l'installation
+   stricte de pnpm ne l'expose pas à `apps/mobile/node_modules`. Ajouté comme devDependency
+   directe.
+5. **Échec `expo doctor` (SDK 57 mal aligné)** — corrigé avec `npx expo install --fix` (réaligne
+   les versions `expo-*` et ajoute les plugins de config manquants dans `app.json`).
+6. **Échec de compilation Kotlin natif** (`react-native-screens` incompatible avec la version de
+   React Native) — résolu par le même `expo install --fix` ci-dessus.
+
+Ces six points sont déjà corrigés dans le dépôt ; ils sont documentés ici pour éviter de les
+re-découvrir un par un si un futur changement de dépendance les fait réapparaître.
+
+La distribution finale (Play Store, App Store, ou installation directe de l'APK) reste une
+décision séparée, non traitée ici. Pour iOS : contrairement à Android, un compte Apple Developer
+payant (99 $/an) est nécessaire pour signer un build installable sur un vrai iPhone (le simulateur
+iOS est gratuit mais ne tourne que sur Mac) ; aucun `bundleIdentifier` iOS n'est configuré pour
+l'instant dans `app.json`.
