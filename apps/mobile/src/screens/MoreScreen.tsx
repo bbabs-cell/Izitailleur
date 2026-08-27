@@ -1,0 +1,145 @@
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { canViewFinance, type Role } from "@izitailleur/shared";
+import { useAuth } from "../auth/AuthContext";
+import { useTheme } from "../theme/ThemeContext";
+import { Card } from "../components/Card";
+import type { AppStackParamList } from "../navigation/RootNavigator";
+
+type Props = NativeStackScreenProps<AppStackParamList, "More">;
+
+interface MenuItem {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+  visible?: boolean;
+}
+
+export function MoreScreen({ navigation }: Props) {
+  const { user, logout } = useAuth();
+  const { colors, spacing, radius, typography } = useTheme();
+  const canFinance = !!user && canViewFinance(user.role as Role);
+  const isAdmin = !!user && (user.role === "OWNER" || user.role === "ADMIN");
+
+  const sections: { title: string; items: MenuItem[] }[] = [
+    {
+      title: "Atelier",
+      items: [
+        { label: "Équipe", icon: "people-outline", onPress: () => navigation.navigate("Team") },
+        { label: "Tissus", icon: "color-palette-outline", onPress: () => navigation.navigate("Fabrics") },
+        { label: "Fournisseurs", icon: "cube-outline", onPress: () => navigation.navigate("Suppliers") },
+        {
+          label: "Problèmes de l'atelier",
+          icon: "warning-outline",
+          onPress: () => navigation.navigate("Issues"),
+        },
+        {
+          label: "Assistant de l'atelier",
+          icon: "sparkles-outline",
+          onPress: () => navigation.navigate("Assistant"),
+        },
+      ],
+    },
+    {
+      title: "Finances",
+      items: [
+        {
+          label: "Argent à récupérer",
+          icon: "cash-outline",
+          onPress: () => navigation.navigate("Debts"),
+          visible: canFinance,
+        },
+        {
+          label: "Statistiques",
+          icon: "stats-chart-outline",
+          onPress: () => navigation.navigate("FinanceStats"),
+          visible: canFinance,
+        },
+      ],
+    },
+    {
+      title: "Application",
+      items: [
+        { label: "Notifications", icon: "notifications-outline", onPress: () => navigation.navigate("Notifications") },
+        { label: "Synchronisation", icon: "sync-outline", onPress: () => navigation.navigate("SyncStatus") },
+        { label: "Recherche", icon: "search-outline", onPress: () => navigation.navigate("Search") },
+        {
+          label: "Paramètres de l'atelier",
+          icon: "settings-outline",
+          onPress: () => navigation.navigate("WorkshopSettings"),
+          visible: isAdmin,
+        },
+        { label: "Apparence & langue", icon: "color-wand-outline", onPress: () => navigation.navigate("Settings") },
+      ],
+    },
+  ];
+
+  return (
+    <ScrollView
+      style={{ backgroundColor: colors.background }}
+      contentContainerStyle={[styles.container, { padding: spacing.lg, gap: spacing.lg }]}
+    >
+      <Text style={[typography.title, { color: colors.textPrimary }]}>Plus</Text>
+
+      {sections.map((section) => {
+        const visibleItems = section.items.filter((item) => item.visible !== false);
+        if (visibleItems.length === 0) return null;
+        return (
+          <View key={section.title} style={{ gap: spacing.sm }}>
+            <Text style={[typography.overline, { color: colors.textMuted }]}>{section.title}</Text>
+            <Card style={{ padding: 0, overflow: "hidden" }}>
+              {visibleItems.map((item, i) => (
+                <TouchableOpacity
+                  key={item.label}
+                  onPress={item.onPress}
+                  style={[
+                    styles.row,
+                    {
+                      padding: spacing.md,
+                      borderTopWidth: i === 0 ? 0 : 1,
+                      borderTopColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Ionicons name={item.icon} size={20} color={colors.accent} />
+                  <Text style={[typography.body, { color: colors.textPrimary, flex: 1 }]}>{item.label}</Text>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </TouchableOpacity>
+              ))}
+            </Card>
+          </View>
+        );
+      })}
+
+      <TouchableOpacity
+        onPress={logout}
+        testID="logout-button"
+        style={[
+          styles.row,
+          {
+            padding: spacing.md,
+            borderRadius: radius.md,
+            borderWidth: 1,
+            borderColor: colors.dangerSoft,
+            justifyContent: "center",
+          },
+        ]}
+      >
+        <Ionicons name="log-out-outline" size={20} color={colors.danger} />
+        <Text style={[typography.subtitle, { color: colors.danger }]}>Se déconnecter</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+});
