@@ -130,7 +130,13 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
           <Text style={styles.label}>Mode de paiement</Text>
           <View style={styles.row}>
             {PAYMENT_METHODS.map((m) => (
-              <Pressable key={m} onPress={() => setMethod(m)}>
+              <Pressable
+                key={m}
+                onPress={() => setMethod(m)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: method === m }}
+                accessibilityLabel={PAYMENT_METHOD_LABELS[m]}
+              >
                 <Badge label={PAYMENT_METHOD_LABELS[m]} tone={method === m ? "success" : "neutral"} />
               </Pressable>
             ))}
@@ -152,7 +158,11 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
             </View>
             <Text style={styles.body}>{new Date(payment.createdAt).toLocaleString("fr-FR")}</Text>
             {payment.receipt ? (
-              <Pressable onPress={() => navigation.navigate("Receipt", { receiptId: payment.receipt!.id })}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Voir le reçu ${payment.receipt.number}`}
+                onPress={() => navigation.navigate("Receipt", { receiptId: payment.receipt!.id })}
+              >
                 <Text style={styles.receiptLink}>🧾 Voir le reçu {payment.receipt.number}</Text>
               </Pressable>
             ) : null}

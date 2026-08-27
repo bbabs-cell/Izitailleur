@@ -68,7 +68,7 @@ export function AssistantScreen() {
       {exchanges.length === 0 ? (
         <View style={styles.suggestions}>
           {SUGGESTIONS.map((s) => (
-            <Pressable key={s} onPress={() => submit(s)}>
+            <Pressable key={s} onPress={() => submit(s)} accessibilityRole="button" accessibilityLabel={s}>
               <Card style={styles.suggestionCard}>
                 <Text style={styles.suggestionText}>{s}</Text>
               </Card>

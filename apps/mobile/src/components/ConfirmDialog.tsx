@@ -29,10 +29,13 @@ export function ConfirmDialog({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <Pressable
         style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: "center", padding: spacing.lg }}
+        accessibilityRole="button"
+        accessibilityLabel={cancelLabel}
         onPress={onCancel}
       >
         <Pressable
           onPress={(e) => e.stopPropagation()}
+          accessibilityViewIsModal
           style={{
             backgroundColor: colors.surface,
             borderRadius: radius.lg,

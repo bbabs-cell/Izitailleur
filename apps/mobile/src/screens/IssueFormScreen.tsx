@@ -67,7 +67,13 @@ export function IssueFormScreen({ navigation }: Props) {
       <Text style={styles.label}>Catégorie</Text>
       <View style={styles.row}>
         {ISSUE_CATEGORIES.map((c) => (
-          <Pressable key={c} onPress={() => setCategory(c)}>
+          <Pressable
+            key={c}
+            onPress={() => setCategory(c)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: category === c }}
+            accessibilityLabel={ISSUE_CATEGORY_LABELS[c]}
+          >
             <Badge label={ISSUE_CATEGORY_LABELS[c]} tone={category === c ? "success" : "neutral"} />
           </Pressable>
         ))}
@@ -76,7 +82,13 @@ export function IssueFormScreen({ navigation }: Props) {
       <Text style={styles.label}>Priorité</Text>
       <View style={styles.row}>
         {PRIORITIES.map((p) => (
-          <Pressable key={p} onPress={() => setPriority(p)}>
+          <Pressable
+            key={p}
+            onPress={() => setPriority(p)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: priority === p }}
+            accessibilityLabel={PRIORITY_LABELS[p]}
+          >
             <Badge label={PRIORITY_LABELS[p]} tone={priority === p ? "warning" : "neutral"} />
           </Pressable>
         ))}

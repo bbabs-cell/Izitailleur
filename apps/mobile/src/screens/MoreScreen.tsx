@@ -105,6 +105,8 @@ export function MoreScreen({ navigation }: Props) {
                 <TouchableOpacity
                   key={item.label}
                   onPress={item.onPress}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
                   style={[
                     styles.row,
                     {
@@ -127,6 +129,8 @@ export function MoreScreen({ navigation }: Props) {
       <TouchableOpacity
         onPress={() => setConfirmingLogout(true)}
         testID="logout-button"
+        accessibilityRole="button"
+        accessibilityLabel={t("more.logout")}
         style={[
           styles.row,
           {

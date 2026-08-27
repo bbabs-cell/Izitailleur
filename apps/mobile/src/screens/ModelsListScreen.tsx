@@ -62,7 +62,11 @@ export function ModelsListScreen({ navigation }: Props) {
           ) : null
         }
         renderItem={({ item }) => (
-          <Pressable onPress={() => navigation.navigate("ModelDetail", { modelId: item.id })}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={item.name}
+            onPress={() => navigation.navigate("ModelDetail", { modelId: item.id })}
+          >
             <Card style={styles.card}>
               <View style={styles.headerRow}>
                 <Text style={styles.name}>{item.name}</Text>

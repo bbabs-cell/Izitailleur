@@ -66,7 +66,11 @@ export function DebtsScreen({ navigation }: Props) {
           !loading ? <EmptyState icon="cash-outline" title="Aucune dette" description="Tous les clients sont à jour." /> : null
         }
         renderItem={({ item }) => (
-          <Pressable onPress={() => navigation.navigate("OrderDetail", { orderId: item.orderId })}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${item.customer.firstName} ${item.customer.lastName}`}
+            onPress={() => navigation.navigate("OrderDetail", { orderId: item.orderId })}
+          >
             <Card style={styles.card}>
               <View style={styles.headerRow}>
                 <Text style={styles.name}>

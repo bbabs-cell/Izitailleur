@@ -28,6 +28,9 @@ export function SettingsScreen() {
             <TouchableOpacity
               key={option.value}
               onPress={() => setMode(option.value)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: mode === option.value }}
+              accessibilityLabel={t(option.labelKey)}
               style={[
                 styles.row,
                 {
@@ -54,6 +57,9 @@ export function SettingsScreen() {
             <TouchableOpacity
               key={option.value}
               onPress={() => setLocale(option.value)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: locale === option.value }}
+              accessibilityLabel={option.label}
               style={[
                 styles.row,
                 {

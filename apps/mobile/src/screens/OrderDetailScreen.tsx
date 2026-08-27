@@ -255,7 +255,13 @@ export function OrderDetailScreen({ route, navigation }: Props) {
         <Text style={styles.body}>Aucune tâche pour cette commande.</Text>
       ) : (
         tasks.map((task) => (
-          <Pressable key={task.id} onPress={() => toggleTask(task.id, task.status)}>
+          <Pressable
+            key={task.id}
+            onPress={() => toggleTask(task.id, task.status)}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: task.status === "DONE" }}
+            accessibilityLabel={task.title}
+          >
             <Card style={styles.taskCard}>
               <Text style={styles.checkbox}>{task.status === "DONE" ? "☑" : "☐"}</Text>
               <Text style={[styles.body, task.status === "DONE" ? styles.taskDone : null]}>

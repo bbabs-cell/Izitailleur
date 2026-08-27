@@ -88,7 +88,13 @@ export function AppointmentFormScreen({ navigation }: Props) {
       <Text style={styles.label}>Type</Text>
       <View style={styles.row}>
         {APPOINTMENT_TYPES.map((t) => (
-          <Pressable key={t} onPress={() => setType(t)}>
+          <Pressable
+            key={t}
+            onPress={() => setType(t)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: type === t }}
+            accessibilityLabel={TYPE_LABELS[t]}
+          >
             <Badge label={TYPE_LABELS[t]} tone={type === t ? "success" : "neutral"} />
           </Pressable>
         ))}
@@ -101,7 +107,12 @@ export function AppointmentFormScreen({ navigation }: Props) {
         horizontal
         showsHorizontalScrollIndicator={false}
         renderItem={({ item }) => (
-          <Pressable onPress={() => setCustomerId(customerId === item.id ? undefined : item.id)}>
+          <Pressable
+            onPress={() => setCustomerId(customerId === item.id ? undefined : item.id)}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: customerId === item.id }}
+            accessibilityLabel={`${item.firstName} ${item.lastName}`}
+          >
             <Badge
               label={`${item.firstName} ${item.lastName}`}
               tone={customerId === item.id ? "success" : "neutral"}

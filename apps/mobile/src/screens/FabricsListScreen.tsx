@@ -54,7 +54,11 @@ export function FabricsListScreen({ navigation }: Props) {
         contentContainerStyle={styles.list}
         ListEmptyComponent={!loading ? <EmptyState icon="color-palette-outline" title="Aucun tissu" description="Ajoutez votre premier tissu en stock." /> : null}
         renderItem={({ item }) => (
-          <Pressable onPress={() => navigation.navigate("FabricDetail", { fabricId: item.id })}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={item.name}
+            onPress={() => navigation.navigate("FabricDetail", { fabricId: item.id })}
+          >
             <Card style={styles.card}>
               <View style={styles.headerRow}>
                 <Text style={styles.name}>{item.name}</Text>

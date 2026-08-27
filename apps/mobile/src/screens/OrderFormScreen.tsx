@@ -172,7 +172,12 @@ export function OrderFormScreen({ route, navigation }: Props) {
               horizontal
               showsHorizontalScrollIndicator={false}
               renderItem={({ item }) => (
-                <Pressable onPress={() => setCustomerId(item.id)}>
+                <Pressable
+                  onPress={() => setCustomerId(item.id)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: customerId === item.id }}
+                  accessibilityLabel={`${item.firstName} ${item.lastName}`}
+                >
                   <Badge
                     label={`${item.firstName} ${item.lastName}`}
                     tone={customerId === item.id ? "success" : "neutral"}
@@ -220,7 +225,13 @@ export function OrderFormScreen({ route, navigation }: Props) {
       {currentStep === "Priorité" ? (
         <View style={styles.row}>
           {PRIORITIES.map((p) => (
-            <Pressable key={p} onPress={() => setPriority(p)}>
+            <Pressable
+              key={p}
+              onPress={() => setPriority(p)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: priority === p }}
+              accessibilityLabel={PRIORITY_LABELS[p]}
+            >
               <Badge label={PRIORITY_LABELS[p]} tone={priority === p ? "warning" : "neutral"} />
             </Pressable>
           ))}

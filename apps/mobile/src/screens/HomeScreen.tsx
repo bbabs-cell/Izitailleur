@@ -166,7 +166,11 @@ export function HomeScreen({ navigation }: Props) {
       {dashboard && dashboard.money ? (
         <>
           <Text style={styles.sectionTitle}>Argent</Text>
-          <Pressable onPress={() => navigation.navigate("Debts")}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Argent à récupérer"
+            onPress={() => navigation.navigate("Debts")}
+          >
             <Card style={styles.card}>
               <Row styles={styles} label="Dettes clients" value={formatFcfa(dashboard.money.totalDebt)} />
               <Row styles={styles} label="Clients débiteurs" value={dashboard.money.debtorsCount} />
@@ -178,7 +182,7 @@ export function HomeScreen({ navigation }: Props) {
 
       {/* Stock */}
       <Text style={styles.sectionTitle}>Stock</Text>
-      <Pressable onPress={() => navigation.navigate("Fabrics")}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Stock" onPress={() => navigation.navigate("Fabrics")}>
         <Card style={styles.card}>
           {dashboard ? (
             dashboard.stock.lowStockFabrics.length === 0 ? (
@@ -199,7 +203,7 @@ export function HomeScreen({ navigation }: Props) {
       {dashboard && dashboard.team ? (
         <>
           <Text style={styles.sectionTitle}>Équipe</Text>
-          <Pressable onPress={() => navigation.navigate("Team")}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Équipe" onPress={() => navigation.navigate("Team")}>
             <Card style={styles.card}>
               {dashboard.team.tasksByAssignee.length === 0 ? (
                 <Text style={styles.body}>Aucune tâche assignée en cours.</Text>
@@ -243,5 +247,11 @@ function Row({
       </Text>
     </View>
   );
-  return onPress ? <Pressable onPress={onPress}>{content}</Pressable> : content;
+  return onPress ? (
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress}>
+      {content}
+    </Pressable>
+  ) : (
+    content
+  );
 }

@@ -80,7 +80,11 @@ export function IssuesListScreen({ navigation }: Props) {
             <Badge label={ISSUE_CATEGORY_LABELS[item.category as IssueCategory] ?? item.category} tone="info" />
             {item.description ? <Text style={styles.body}>{item.description}</Text> : null}
             {item.status !== "RESOLVED" ? (
-              <Pressable onPress={() => resolve(item.id)}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Marquer comme résolu"
+                onPress={() => resolve(item.id)}
+              >
                 <Text style={styles.resolveLink}>✅ Marquer comme résolu</Text>
               </Pressable>
             ) : null}

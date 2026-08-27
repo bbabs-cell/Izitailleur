@@ -88,6 +88,8 @@ export function SearchScreen({ navigation }: Props) {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[styles.row, { paddingVertical: spacing.sm, borderBottomColor: colors.border }]}
+            accessibilityRole="button"
+            accessibilityLabel={item.title}
             onPress={() =>
               item.kind === "customer"
                 ? navigation.navigate("CustomerDetail", { customerId: item.id })

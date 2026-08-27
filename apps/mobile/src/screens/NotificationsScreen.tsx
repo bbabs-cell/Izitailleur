@@ -77,7 +77,12 @@ export function NotificationsScreen() {
           ) : null
         }
         renderItem={({ item }) => (
-          <Pressable onPress={() => (!item.read ? markRead(item.id) : undefined)}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={item.title}
+            accessibilityState={{ selected: item.read }}
+            onPress={() => (!item.read ? markRead(item.id) : undefined)}
+          >
             <Card style={[styles.card, item.read ? styles.cardRead : null]}>
               <View style={styles.headerRow}>
                 <Text style={styles.icon}>{NOTIFICATION_ICONS[item.type]}</Text>

@@ -61,7 +61,13 @@ export function TeamInviteScreen({ navigation }: Props) {
       <Text style={styles.label}>Rôle</Text>
       <View style={styles.row}>
         {INVITABLE_ROLES.map((r) => (
-          <Pressable key={r} onPress={() => setRole(r)}>
+          <Pressable
+            key={r}
+            onPress={() => setRole(r)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: role === r }}
+            accessibilityLabel={ROLE_LABELS[r]}
+          >
             <Badge label={ROLE_LABELS[r]} tone={role === r ? "success" : "neutral"} />
           </Pressable>
         ))}
