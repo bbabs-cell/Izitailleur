@@ -5,12 +5,12 @@ photos, avec l'infrastructure validée (voir ARCHITECTURE.md) : **Vercel** (API)
 (PostgreSQL, via l'intégration Vercel Postgres), **Cloudflare R2** (photos), **Upstash Redis**
 (anti-brute-force partagé).
 
-**État réel (mis à jour après la mise en production réelle du 26/08/2026)** : l'API tourne
-réellement sur Vercel, connectée à une vraie base Neon et à un vrai Redis Upstash — inscription,
-connexion, tableau de bord et anti-brute-force ont été testés directement contre les URLs de
-production (pas de simulation). Seul le stockage des photos (Cloudflare R2) reste à configurer.
-Voir le detail « Vérifié / Non vérifié » à la fin de chaque section pour ce qui reste réellement
-à faire.
+**État réel (mis à jour au 27/08/2026 — mise en production complète)** : l'API tourne réellement
+sur Vercel, connectée à une vraie base Neon, un vrai Redis Upstash et un vrai compartiment
+Cloudflare R2. Inscription, connexion, tableau de bord, création de commande, anti-brute-force et
+upload de photo ont tous été testés directement contre l'infrastructure de production réelle
+(pas de simulation). Les quatre briques (hébergement, sauvegardes, stockage des photos, secrets)
+sont en place et vérifiées.
 
 ## 1. Base de données — Vercel Postgres (Neon)
 
@@ -90,16 +90,17 @@ connexion successives contre l'API réelle ont donné 401 (identifiants invalide
 Sans ces variables, la fonctionnalité photo échoue explicitement avec une erreur 503 côté API
 (« stockage non configuré ») plutôt que d'être présentée comme fonctionnelle.
 
-**Vérifié réellement** : la génération de l'URL pré-signée est un calcul cryptographique
-entièrement local (aucun appel réseau) — testé avec de fausses identifiants R2, l'URL produite
-pointe vers le bon compte/compartiment/chemin avec une signature AWS SigV4 valide
-(`apps/api/src/uploads/uploads.service.spec.ts`). L'autorisation (une commande ne peut recevoir
-une URL de téléversement que si elle appartient à l'atelier de l'utilisateur) et la validation du
-type de fichier sont testées en e2e contre l'API réelle. **Non vérifié** : l'upload réel d'un
-fichier vers un vrai compartiment R2 (aucun compte R2 réel disponible) — le trajet
-mobile → URL pré-signée → PUT direct vers R2 → confirmation à l'API est écrit et cohérent avec la
-documentation officielle R2/S3, mais son fonctionnement réel de bout en bout reste à valider à la
-première utilisation en production.
+**Vérifié réellement en production, de bout en bout** : présignature (`POST /orders/:id/images/upload-url`)
+contre l'API réelle → upload direct d'un fichier JPEG vers le compartiment R2 réel via PUT sur
+l'URL pré-signée (200) → photo accessible publiquement via `R2_PUBLIC_BASE_URL` (200, contenu
+correct). L'autorisation (une commande ne peut recevoir une URL de téléversement que si elle
+appartient à l'atelier de l'utilisateur) et la validation du type de fichier sont également
+testées en e2e.
+
+**Piège rencontré et corrigé** : les variables d'environnement gérées automatiquement par une
+intégration Vercel (Neon, dans ce cas) ne sont pas éditables manuellement dans le tableau de
+bord — impossible d'ajouter `&pgbouncer=true` directement sur `DATABASE_URL`. Corrigé côté code
+(`PrismaService` ajoute ce paramètre lui-même au démarrage) plutôt que côté configuration.
 
 ## 5. Application mobile
 

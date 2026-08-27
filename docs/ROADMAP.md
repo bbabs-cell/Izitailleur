@@ -60,10 +60,14 @@ tests exécutés, résultats, erreurs corrigées, points restants.
       anti-brute-force basculé sur un stockage Redis partagé quand `REDIS_URL` est défini, upload
       de photos vers Cloudflare R2 (présignature testée réellement). Tests réels : 115/115 (API,
       deux exécutions consécutives, idempotent) + 30/30 (mobile).
-- [x] **Mise en production réelle (26/08/2026)** : API déployée et vérifiée en conditions
-      réelles sur Vercel + base Neon (Frankfurt) + Redis Upstash (Frankfurt) — inscription,
-      connexion et `/dashboard` authentifié testés directement contre l'URL de production ;
-      12 tentatives de connexion invalides contre l'API réelle ont donné 10× 401 puis 2× 429,
-      confirmant l'anti-brute-force partagé actif en production. Cloudflare R2 (photos) reste à
-      configurer — voir docs/DEPLOYMENT.md pour la marche à suivre et l'état détaillé de chaque
-      brique.
+- [x] **Mise en production réelle (26–27/08/2026)** : API déployée et vérifiée en conditions
+      réelles sur Vercel + base Neon (Frankfurt) + Redis Upstash (Frankfurt) + Cloudflare R2 —
+      inscription, connexion, `/dashboard` authentifié, création de commande et anti-brute-force
+      (12 tentatives de connexion invalides → 10× 401 puis 2× 429) testés directement contre
+      l'API de production. Upload de photo testé de bout en bout : présignature → PUT réel vers
+      R2 → photo accessible publiquement (200). Deux bugs réels trouvés et corrigés pendant la
+      mise en place : `pgbouncer=true` manquant sur la connexion poolée Neon (transactions Prisma
+      en échec), et une migration Prisma (`receiptFooterMessage`) non appliquée en production.
+      Voir docs/DEPLOYMENT.md pour la marche à suivre détaillée et les pièges rencontrés.
+      Les quatre décisions d'infrastructure (hébergement, sauvegardes, stockage des photos,
+      secrets) sont en place et vérifiées.
