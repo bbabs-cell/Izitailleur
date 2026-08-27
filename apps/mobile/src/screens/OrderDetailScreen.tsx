@@ -214,15 +214,19 @@ export function OrderDetailScreen({ route, navigation }: Props) {
             <Text style={styles.body}>{order.instructions}</Text>
           </>
         ) : null}
-        <Text style={styles.label}>PAIEMENT</Text>
-        <Text style={styles.body}>
-          {order.price.toLocaleString("fr-FR")} FCFA — acompte {order.deposit.toLocaleString("fr-FR")} FCFA
-        </Text>
-        <Text style={[styles.body, balance > 0 ? styles.balanceDue : styles.balancePaid]}>
-          {balance > 0
-            ? `Solde restant (acompte uniquement) : ${balance.toLocaleString("fr-FR")} FCFA`
-            : "Acompte couvrant le prix total"}
-        </Text>
+        {user && canViewFinance(user.role as Role) ? (
+          <>
+            <Text style={styles.label}>PAIEMENT</Text>
+            <Text style={styles.body}>
+              {order.price.toLocaleString("fr-FR")} FCFA — acompte {order.deposit.toLocaleString("fr-FR")} FCFA
+            </Text>
+            <Text style={[styles.body, balance > 0 ? styles.balanceDue : styles.balancePaid]}>
+              {balance > 0
+                ? `Solde restant (acompte uniquement) : ${balance.toLocaleString("fr-FR")} FCFA`
+                : "Acompte couvrant le prix total"}
+            </Text>
+          </>
+        ) : null}
       </Card>
 
       {user && canViewFinance(user.role as Role) ? (

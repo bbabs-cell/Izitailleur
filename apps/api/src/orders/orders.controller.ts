@@ -24,12 +24,12 @@ export class OrdersController {
 
   @Get()
   list(@CurrentUser() user: AuthenticatedUser, @Query("status") status?: OrderStatus) {
-    return this.ordersService.list(user.workshopId, status);
+    return this.ordersService.list(user.workshopId, user.role, status);
   }
 
   @Get(":id")
   get(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string) {
-    return this.ordersService.getOrThrow(user.workshopId, id);
+    return this.ordersService.getOrThrow(user.workshopId, id, user.role);
   }
 
   @Post()

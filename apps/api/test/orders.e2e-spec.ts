@@ -159,4 +159,62 @@ describe("Orders (e2e)", () => {
       .expect(200);
     expect(res.body.every((o: { status: string }) => o.status === "CUTTING")).toBe(true);
   });
+
+  describe("visibilité des données financières par rôle", () => {
+    let apprenticeToken: string;
+
+    beforeAll(async () => {
+      const apprenticePhone = `+22179996${Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, "0")}`;
+      await request(app.getHttpServer())
+        .post("/employees")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ fullName: "Apprenti Test", phone: apprenticePhone, password: "demo12345", role: "APPRENTICE" })
+        .expect(201);
+      const login = await request(app.getHttpServer())
+        .post("/auth/login")
+        .send({ phone: apprenticePhone, password: "demo12345" })
+        .expect(200);
+      apprenticeToken = login.body.accessToken;
+    });
+
+    it("masque le prix et l'acompte d'une commande pour un apprenti (GET /orders/:id)", async () => {
+      const ownerView = await request(app.getHttpServer())
+        .get(`/orders/${orderId}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      expect(ownerView.body.price).toBeGreaterThan(0);
+
+      const apprenticeView = await request(app.getHttpServer())
+        .get(`/orders/${orderId}`)
+        .set("Authorization", `Bearer ${apprenticeToken}`)
+        .expect(200);
+      expect(apprenticeView.body.price).toBe(0);
+      expect(apprenticeView.body.deposit).toBe(0);
+      expect(apprenticeView.body.status).toBe(ownerView.body.status);
+    });
+
+    it("masque le prix et l'acompte pour un apprenti (GET /orders)", async () => {
+      const res = await request(app.getHttpServer())
+        .get("/orders")
+        .set("Authorization", `Bearer ${apprenticeToken}`)
+        .expect(200);
+      expect(res.body.length).toBeGreaterThan(0);
+      expect(res.body.every((o: { price: number; deposit: number }) => o.price === 0 && o.deposit === 0)).toBe(
+        true,
+      );
+    });
+
+    it("masque le prix et l'acompte pour un apprenti (GET /sync/pull)", async () => {
+      const res = await request(app.getHttpServer())
+        .get("/sync/pull")
+        .set("Authorization", `Bearer ${apprenticeToken}`)
+        .expect(200);
+      expect(res.body.orders.length).toBeGreaterThan(0);
+      expect(
+        res.body.orders.every((o: { price: number; deposit: number }) => o.price === 0 && o.deposit === 0),
+      ).toBe(true);
+    });
+  });
 });

@@ -17,7 +17,7 @@ export class SyncController {
     if (Number.isNaN(sinceDate.getTime())) {
       throw new BadRequestException("Paramètre 'since' invalide (format ISO attendu)");
     }
-    return this.syncService.pull(user.workshopId, sinceDate);
+    return this.syncService.pull(user.workshopId, user.role, sinceDate);
   }
 
   @Post("push")

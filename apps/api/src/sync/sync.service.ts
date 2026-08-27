@@ -7,11 +7,13 @@ import {
   syncTaskCreateDataSchema,
   syncTaskUpdateDataSchema,
   type PushSyncDto,
+  type Role,
   type SyncMutation,
   type SyncMutationResult,
 } from "@izitailleur/shared";
 import { PrismaService } from "../prisma/prisma.service";
 import { OrdersService } from "../orders/orders.service";
+import { redactOrderFinancials } from "../common/redact-financials";
 
 @Injectable()
 export class SyncService {
@@ -20,7 +22,7 @@ export class SyncService {
     private readonly ordersService: OrdersService,
   ) {}
 
-  async pull(workshopId: string, since: Date) {
+  async pull(workshopId: string, role: Role, since: Date) {
     const [customers, appointments, orders, tasks] = await Promise.all([
       this.prisma.customer.findMany({ where: { workshopId, updatedAt: { gt: since } } }),
       this.prisma.appointment.findMany({ where: { workshopId, updatedAt: { gt: since } } }),
@@ -32,7 +34,13 @@ export class SyncService {
         where: { order: { workshopId }, updatedAt: { gt: since } },
       }),
     ]);
-    return { serverTime: new Date().toISOString(), customers, appointments, orders, tasks };
+    return {
+      serverTime: new Date().toISOString(),
+      customers,
+      appointments,
+      orders: orders.map((order) => redactOrderFinancials(order, role)),
+      tasks,
+    };
   }
 
   async push(workshopId: string, dto: PushSyncDto): Promise<SyncMutationResult[]> {

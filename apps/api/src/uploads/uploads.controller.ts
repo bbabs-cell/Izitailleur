@@ -24,7 +24,7 @@ export class UploadsController {
     // Vérifie que la commande appartient bien à l'atelier de l'utilisateur avant d'émettre une
     // URL de téléversement — sans ça n'importe quel compte authentifié pourrait écrire dans le
     // dossier photos d'une autre commande en devinant son id.
-    await this.ordersService.getOrThrow(user.workshopId, orderId);
+    await this.ordersService.getOrThrow(user.workshopId, orderId, user.role);
     return this.uploadsService.presignOrderImageUpload(user.workshopId, orderId, dto.contentType);
   }
 }

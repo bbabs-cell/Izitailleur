@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { canTransitionOrderStatus, type OrderStatus } from "@izitailleur/shared";
+import { canTransitionOrderStatus, type OrderStatus, type Role } from "@izitailleur/shared";
 import type { TaskStatus } from "@prisma/client";
 import type {
   CreateOrderDto,
@@ -8,6 +8,7 @@ import type {
 } from "@izitailleur/shared";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { redactOrderFinancials } from "../common/redact-financials";
 
 @Injectable()
 export class OrdersService {
@@ -16,16 +17,18 @@ export class OrdersService {
     private readonly notifications: NotificationsService,
   ) {}
 
-  list(workshopId: string, status?: OrderStatus) {
-    return this.prisma.order.findMany({
+  async list(workshopId: string, role: Role, status?: OrderStatus) {
+    const orders = await this.prisma.order.findMany({
       where: { workshopId, deletedAt: null, ...(status ? { status } : {}) },
       include: { customer: true },
       orderBy: { dueDate: "asc" },
       take: 500,
     });
+    return orders.map((order) => redactOrderFinancials(order, role));
   }
 
-  async getOrThrow(workshopId: string, id: string) {
+  /** Version brute (non filtrée) réservée aux usages internes du service — jamais exposée directement. */
+  private async findOrThrow(workshopId: string, id: string) {
     const order = await this.prisma.order.findFirst({
       where: { id, workshopId, deletedAt: null },
       include: {
@@ -41,6 +44,11 @@ export class OrdersService {
       throw new NotFoundException("Commande introuvable");
     }
     return order;
+  }
+
+  async getOrThrow(workshopId: string, id: string, role: Role) {
+    const order = await this.findOrThrow(workshopId, id);
+    return redactOrderFinancials(order, role);
   }
 
   async create(workshopId: string, dto: CreateOrderDto, id?: string) {
@@ -134,7 +142,7 @@ export class OrdersService {
   }
 
   async updateStatus(workshopId: string, id: string, toStatus: OrderStatus) {
-    const order = await this.getOrThrow(workshopId, id);
+    const order = await this.findOrThrow(workshopId, id);
     if (!canTransitionOrderStatus(order.status, toStatus)) {
       throw new BadRequestException(
         `Transition de statut invalide : ${order.status} → ${toStatus}`,
@@ -165,17 +173,17 @@ export class OrdersService {
   }
 
   async listImages(workshopId: string, orderId: string) {
-    await this.getOrThrow(workshopId, orderId);
+    await this.findOrThrow(workshopId, orderId);
     return this.prisma.orderImage.findMany({ where: { orderId }, orderBy: { createdAt: "desc" } });
   }
 
   async addImage(workshopId: string, orderId: string, dto: CreateOrderImageDto) {
-    await this.getOrThrow(workshopId, orderId);
+    await this.findOrThrow(workshopId, orderId);
     return this.prisma.orderImage.create({ data: { orderId, url: dto.url } });
   }
 
   async addTask(workshopId: string, orderId: string, dto: CreateOrderTaskDto, id?: string) {
-    await this.getOrThrow(workshopId, orderId);
+    await this.findOrThrow(workshopId, orderId);
     return this.prisma.orderTask.create({
       data: {
         id,
@@ -189,7 +197,7 @@ export class OrdersService {
   }
 
   async updateTaskStatus(workshopId: string, orderId: string, taskId: string, status: TaskStatus) {
-    await this.getOrThrow(workshopId, orderId);
+    await this.findOrThrow(workshopId, orderId);
     const task = await this.prisma.orderTask.findFirst({ where: { id: taskId, orderId } });
     if (!task) {
       throw new NotFoundException("Tâche introuvable");
