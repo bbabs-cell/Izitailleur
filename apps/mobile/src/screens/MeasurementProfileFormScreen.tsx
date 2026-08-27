@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { createMeasurementProfileSchema } from "@izitailleur/shared";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { customersApi } from "../api/customers";
+import { workshopApi } from "../api/workshop";
 import { ApiError } from "../api/client";
 import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "MeasurementProfileForm">;
 
-const STANDARD_FIELDS = [
+const FALLBACK_FIELDS = [
   "epaule",
   "poitrine",
   "taille",
@@ -20,16 +21,26 @@ const STANDARD_FIELDS = [
   "bras",
   "manche",
   "longueur",
-] as const;
+];
 
 export function MeasurementProfileFormScreen({ route, navigation }: Props) {
   const { customerId } = route.params;
   const [label, setLabel] = useState("");
   const [values, setValues] = useState<Record<string, string>>({});
+  const [standardFields, setStandardFields] = useState<string[]>(FALLBACK_FIELDS);
   const [customFieldName, setCustomFieldName] = useState("");
   const [customFields, setCustomFields] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    workshopApi
+      .get()
+      .then((settings) => {
+        if (settings.measurementFields.length > 0) setStandardFields(settings.measurementFields);
+      })
+      .catch(() => undefined);
+  }, []);
   const styles = useThemedStyles((t) => ({
     container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
     title: { ...t.typography.title, color: t.colors.textPrimary },
@@ -93,7 +104,7 @@ export function MeasurementProfileFormScreen({ route, navigation }: Props) {
       <TextField label="Nom du profil" value={label} onChangeText={setLabel} placeholder="Boubou standard" />
 
       <Text style={styles.section}>Mesures (cm)</Text>
-      {STANDARD_FIELDS.map((field) => (
+      {standardFields.map((field) => (
         <TextField
           key={field}
           label={field}

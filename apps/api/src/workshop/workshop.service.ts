@@ -8,6 +8,7 @@ const SETTINGS_SELECT = {
   phone: true,
   address: true,
   receiptFooterMessage: true,
+  measurementFields: true,
 } as const;
 
 @Injectable()

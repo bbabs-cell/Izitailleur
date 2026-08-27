@@ -24,6 +24,7 @@ model Workshop {
   phone                 String?
   address               String?
   receiptFooterMessage  String?
+  measurementFields     String[]  @default(["epaule", "poitrine", "taille", "hanche", "cou", "bras", "manche", "longueur"])
   orderSequence         Int       @default(0)
   receiptSequence       Int       @default(0)
   createdAt             DateTime  @default(now())
