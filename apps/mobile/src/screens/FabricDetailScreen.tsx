@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
@@ -7,7 +7,7 @@ import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { fabricsApi, type FabricDetail } from "../api/fabrics";
 import { ApiError } from "../api/client";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "FabricDetail">;
@@ -24,6 +24,18 @@ export function FabricDetailScreen({ route, navigation }: Props) {
   const [movementQuantity, setMovementQuantity] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.sm },
+    headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    title: { ...t.typography.title, color: t.colors.textPrimary },
+    stock: { ...t.typography.body, color: t.colors.textSecondary },
+    card: { gap: t.spacing.sm, marginTop: t.spacing.sm },
+    row: { flexDirection: "row", gap: t.spacing.sm },
+    section: { ...t.typography.subtitle, color: t.colors.textPrimary, marginTop: t.spacing.md },
+    movementCard: { flexDirection: "row", alignItems: "center", gap: t.spacing.sm },
+    body: { ...t.typography.body, color: t.colors.textPrimary },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   const load = useCallback(async () => {
     try {
@@ -110,51 +122,3 @@ export function FabricDetailScreen({ route, navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  stock: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  card: {
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  row: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  section: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-    marginTop: spacing.md,
-  },
-  movementCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  body: {
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

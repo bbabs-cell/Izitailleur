@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { createOrderSchema, PRIORITIES, type Priority } from "@izitailleur/shared";
 import { Button } from "../components/Button";
@@ -8,7 +8,7 @@ import { Badge } from "../components/Badge";
 import { ordersRepo } from "../offline/ordersRepo";
 import { customersRepo } from "../offline/customersRepo";
 import type { LocalCustomer as Customer } from "../offline/customersRepo";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "OrderForm">;
@@ -37,6 +37,14 @@ export function OrderFormScreen({ route, navigation }: Props) {
   const [instructions, setInstructions] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    title: { ...t.typography.title, color: t.colors.textPrimary },
+    label: { ...t.typography.caption, color: t.colors.textSecondary },
+    customerPicker: { gap: t.spacing.xs },
+    row: { flexDirection: "row", flexWrap: "wrap", gap: t.spacing.xs },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   useEffect(() => {
     if (!preselectedCustomerId) {
@@ -114,7 +122,7 @@ export function OrderFormScreen({ route, navigation }: Props) {
                 />
               </Pressable>
             )}
-            ItemSeparatorComponent={() => <View style={{ width: spacing.xs }} />}
+            ItemSeparatorComponent={() => <View style={{ width: 4 }} />}
           />
         </View>
       )}
@@ -141,32 +149,3 @@ export function OrderFormScreen({ route, navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  customerPicker: {
-    gap: spacing.xs,
-  },
-  row: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

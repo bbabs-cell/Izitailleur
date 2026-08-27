@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { inviteEmployeeSchema, ROLES, type Role } from "@izitailleur/shared";
 import { Button } from "../components/Button";
@@ -8,7 +8,7 @@ import { Badge } from "../components/Badge";
 import { employeesApi } from "../api/employees";
 import { ApiError } from "../api/client";
 import { ROLE_LABELS } from "../domain/roles";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "TeamInvite">;
@@ -22,6 +22,13 @@ export function TeamInviteScreen({ navigation }: Props) {
   const [role, setRole] = useState<Role>("APPRENTICE");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    title: { ...t.typography.title, color: t.colors.textPrimary },
+    label: { ...t.typography.caption, color: t.colors.textSecondary },
+    row: { flexDirection: "row", flexWrap: "wrap", gap: t.spacing.xs },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   async function handleSubmit() {
     setError(null);
@@ -62,29 +69,3 @@ export function TeamInviteScreen({ navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  row: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

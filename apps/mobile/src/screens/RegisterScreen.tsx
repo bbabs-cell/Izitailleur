@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, Text } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { registerSchema } from "@izitailleur/shared";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { useAuth } from "../auth/AuthContext";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import { ApiError } from "../api/client";
 import type { AuthStackParamList } from "../navigation/RootNavigator";
 
@@ -19,6 +19,12 @@ export function RegisterScreen({ navigation }: Props) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md, justifyContent: "center" },
+    title: { ...t.typography.title, color: t.colors.textPrimary, textAlign: "center", marginBottom: t.spacing.md },
+    subtitle: { ...t.typography.body, color: t.colors.textSecondary, textAlign: "center", marginBottom: t.spacing.md },
+    error: { color: t.colors.danger, ...t.typography.caption },
+  }));
 
   async function handleSubmit() {
     setError(null);
@@ -40,6 +46,7 @@ export function RegisterScreen({ navigation }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Créer votre atelier</Text>
+      <Text style={styles.subtitle}>Votre atelier. Tout simplement.</Text>
 
       <TextField label="Nom de l'atelier" value={workshopName} onChangeText={setWorkshopName} />
       <TextField label="Votre nom complet" value={fullName} onChangeText={setFullName} />
@@ -60,23 +67,3 @@ export function RegisterScreen({ navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-    justifyContent: "center",
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-    textAlign: "center",
-    marginBottom: spacing.md,
-  },
-  error: {
-    color: colors.danger,
-    ...typography.caption,
-  },
-});

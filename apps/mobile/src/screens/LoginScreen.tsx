@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { loginSchema } from "@izitailleur/shared";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { useAuth } from "../auth/AuthContext";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import { ApiError } from "../api/client";
 import type { AuthStackParamList } from "../navigation/RootNavigator";
 
@@ -17,6 +17,13 @@ export function LoginScreen({ navigation }: Props) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const styles = useThemedStyles((t) => ({
+    container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, justifyContent: "center", gap: t.spacing.lg },
+    title: { ...t.typography.hero, color: t.colors.accent, textAlign: "center" },
+    subtitle: { ...t.typography.body, color: t.colors.textSecondary, textAlign: "center" },
+    form: { gap: t.spacing.md },
+    error: { color: t.colors.danger, ...t.typography.caption },
+  }));
 
   async function handleSubmit() {
     setError(null);
@@ -38,7 +45,7 @@ export function LoginScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>IZITAILLEUR</Text>
-      <Text style={styles.subtitle}>Connectez-vous à votre atelier</Text>
+      <Text style={styles.subtitle}>L'assistant intelligent de votre atelier.</Text>
 
       <View style={styles.form}>
         <TextField
@@ -68,30 +75,3 @@ export function LoginScreen({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    justifyContent: "center",
-    gap: spacing.lg,
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-    textAlign: "center",
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: "center",
-  },
-  form: {
-    gap: spacing.md,
-  },
-  error: {
-    color: colors.danger,
-    ...typography.caption,
-  },
-});

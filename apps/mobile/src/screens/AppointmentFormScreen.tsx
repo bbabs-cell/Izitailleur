@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { APPOINTMENT_TYPES, createAppointmentSchema, type AppointmentType } from "@izitailleur/shared";
 import { Button } from "../components/Button";
@@ -7,7 +7,7 @@ import { TextField } from "../components/TextField";
 import { Badge } from "../components/Badge";
 import { appointmentsRepo } from "../offline/appointmentsRepo";
 import { customersRepo, type LocalCustomer } from "../offline/customersRepo";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "AppointmentForm">;
@@ -36,6 +36,13 @@ export function AppointmentFormScreen({ navigation }: Props) {
   const [customers, setCustomers] = useState<LocalCustomer[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    title: { ...t.typography.title, color: t.colors.textPrimary },
+    label: { ...t.typography.caption, color: t.colors.textSecondary },
+    row: { flexDirection: "row", flexWrap: "wrap", gap: t.spacing.xs },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   useEffect(() => {
     customersRepo.list().then(setCustomers).catch(() => setCustomers([]));
@@ -99,7 +106,7 @@ export function AppointmentFormScreen({ navigation }: Props) {
             />
           </Pressable>
         )}
-        ItemSeparatorComponent={() => <View style={{ width: spacing.xs }} />}
+        ItemSeparatorComponent={() => <View style={{ width: 4 }} />}
       />
 
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
@@ -107,29 +114,3 @@ export function AppointmentFormScreen({ navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  row: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

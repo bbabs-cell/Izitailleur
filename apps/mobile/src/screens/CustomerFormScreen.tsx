@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, Text } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { customerSchema } from "@izitailleur/shared";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { customersRepo } from "../offline/customersRepo";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "CustomerForm">;
@@ -18,6 +18,11 @@ export function CustomerFormScreen({ navigation }: Props) {
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    title: { ...t.typography.title, color: t.colors.textPrimary },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   async function handleSubmit() {
     setError(null);
@@ -58,20 +63,3 @@ export function CustomerFormScreen({ navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

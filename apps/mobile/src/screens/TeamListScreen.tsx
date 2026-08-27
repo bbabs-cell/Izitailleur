@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
+import { EmptyState } from "../components/EmptyState";
 import { employeesApi, type Employee } from "../api/employees";
 import { useAuth } from "../auth/AuthContext";
 import { ROLE_LABELS, canManageTeam } from "../domain/roles";
 import type { Role } from "@izitailleur/shared";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Team">;
@@ -18,6 +19,15 @@ export function TeamListScreen({ navigation }: Props) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const styles = useThemedStyles((t) => ({
+    container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    list: { gap: t.spacing.sm, paddingBottom: t.spacing.md, flexGrow: 1 },
+    card: { gap: t.spacing.xs },
+    row: { flexDirection: "row", alignItems: "center", gap: t.spacing.sm },
+    name: { ...t.typography.subtitle, color: t.colors.textPrimary },
+    phone: { ...t.typography.caption, color: t.colors.textSecondary },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -47,6 +57,7 @@ export function TeamListScreen({ navigation }: Props) {
         refreshing={loading}
         onRefresh={load}
         contentContainerStyle={styles.list}
+        ListEmptyComponent={<EmptyState icon="people-outline" title="Équipe vide" description="Aucun membre pour le moment." />}
         renderItem={({ item }) => (
           <Card style={styles.card}>
             <Text style={styles.name}>{item.fullName}</Text>
@@ -63,36 +74,3 @@ export function TeamListScreen({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  list: {
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  card: {
-    gap: spacing.xs,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  name: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-  },
-  phone: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

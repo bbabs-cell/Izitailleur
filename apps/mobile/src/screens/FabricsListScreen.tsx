@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
+import { EmptyState } from "../components/EmptyState";
 import { fabricsApi, type Fabric } from "../api/fabrics";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Fabrics">;
@@ -14,6 +15,16 @@ export function FabricsListScreen({ navigation }: Props) {
   const [fabrics, setFabrics] = useState<Fabric[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const styles = useThemedStyles((t) => ({
+    container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    list: { gap: t.spacing.sm, paddingBottom: t.spacing.md, flexGrow: 1 },
+    card: { gap: t.spacing.xs },
+    headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    name: { ...t.typography.subtitle, color: t.colors.textPrimary },
+    body: { ...t.typography.body, color: t.colors.textPrimary },
+    supplier: { ...t.typography.caption, color: t.colors.textSecondary },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,7 +52,7 @@ export function FabricsListScreen({ navigation }: Props) {
         refreshing={loading}
         onRefresh={load}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={!loading ? <Text style={styles.empty}>Aucun tissu en stock.</Text> : null}
+        ListEmptyComponent={!loading ? <EmptyState icon="color-palette-outline" title="Aucun tissu" description="Ajoutez votre premier tissu en stock." /> : null}
         renderItem={({ item }) => (
           <Pressable onPress={() => navigation.navigate("FabricDetail", { fabricId: item.id })}>
             <Card style={styles.card}>
@@ -62,46 +73,3 @@ export function FabricsListScreen({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  list: {
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  card: {
-    gap: spacing.xs,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  name: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-  },
-  body: {
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  supplier: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  empty: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: spacing.lg,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
@@ -7,7 +7,7 @@ import { Button } from "../components/Button";
 import { customersApi, type CustomerDetail } from "../api/customers";
 import { customersRepo, type LocalCustomer } from "../offline/customersRepo";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE } from "../domain/orderStatus";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "CustomerDetail">;
@@ -17,6 +17,15 @@ export function CustomerDetailScreen({ route, navigation }: Props) {
   const [customer, setCustomer] = useState<CustomerDetail | null>(null);
   const [localOnly, setLocalOnly] = useState<LocalCustomer | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.sm },
+    title: { ...t.typography.title, color: t.colors.textPrimary },
+    section: { ...t.typography.subtitle, color: t.colors.textPrimary, marginTop: t.spacing.md },
+    body: { ...t.typography.body, color: t.colors.textSecondary },
+    card: { gap: t.spacing.xs },
+    cardTitle: { ...t.typography.body, color: t.colors.textPrimary },
+    error: { ...t.typography.body, color: t.colors.danger },
+  }));
 
   const load = useCallback(async () => {
     try {
@@ -128,36 +137,3 @@ export function CustomerDetailScreen({ route, navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  section: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-    marginTop: spacing.md,
-  },
-  body: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  card: {
-    gap: spacing.xs,
-  },
-  cardTitle: {
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  error: {
-    ...typography.body,
-    color: colors.danger,
-  },
-});

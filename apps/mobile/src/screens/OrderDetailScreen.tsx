@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -20,7 +20,7 @@ import { orderImagesApi, type OrderImage } from "../api/orderImages";
 import { ApiError } from "../api/client";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE, isOrderLate } from "../domain/orderStatus";
 import { useAuth } from "../auth/AuthContext";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "OrderDetail">;
@@ -40,6 +40,24 @@ export function OrderDetailScreen({ route, navigation }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.sm },
+    headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    title: { ...t.typography.title, color: t.colors.textPrimary },
+    section: { ...t.typography.subtitle, color: t.colors.textPrimary, marginTop: t.spacing.md },
+    card: { gap: t.spacing.xs },
+    taskCard: { flexDirection: "row", alignItems: "center", gap: t.spacing.sm },
+    checkbox: { fontSize: 18, color: t.colors.accent },
+    taskDone: { color: t.colors.textSecondary, textDecorationLine: "line-through" },
+    label: { ...t.typography.caption, color: t.colors.textSecondary, marginTop: t.spacing.xs },
+    body: { ...t.typography.body, color: t.colors.textPrimary },
+    balanceDue: { color: t.colors.warning },
+    balancePaid: { color: t.colors.success },
+    row: { flexDirection: "row", flexWrap: "wrap", gap: t.spacing.sm },
+    error: { ...t.typography.caption, color: t.colors.danger },
+    photoGrid: { flexDirection: "row", flexWrap: "wrap", gap: t.spacing.sm },
+    photo: { width: 96, height: 96, borderRadius: 8, backgroundColor: t.colors.surfaceElevated },
+  }));
 
   const load = useCallback(async () => {
     try {
@@ -266,76 +284,3 @@ export function OrderDetailScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  section: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-    marginTop: spacing.md,
-  },
-  card: {
-    gap: spacing.xs,
-  },
-  taskCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  checkbox: {
-    fontSize: 18,
-    color: colors.accent,
-  },
-  taskDone: {
-    color: colors.textSecondary,
-    textDecorationLine: "line-through",
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  body: {
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  balanceDue: {
-    color: colors.warning,
-  },
-  balancePaid: {
-    color: colors.success,
-  },
-  row: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-  photoGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  photo: {
-    width: 96,
-    height: 96,
-    borderRadius: 8,
-    backgroundColor: colors.surface,
-  },
-});
