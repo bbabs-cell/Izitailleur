@@ -6,6 +6,7 @@ import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { useAuth } from "../auth/AuthContext";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import { ApiError } from "../api/client";
 import type { AuthStackParamList } from "../navigation/RootNavigator";
 
@@ -13,6 +14,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, "Register">;
 
 export function RegisterScreen({ navigation }: Props) {
   const { register } = useAuth();
+  const { t } = useTranslation();
   const [workshopName, setWorkshopName] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -45,25 +47,25 @@ export function RegisterScreen({ navigation }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Créer votre atelier</Text>
-      <Text style={styles.subtitle}>Votre atelier. Tout simplement.</Text>
+      <Text style={styles.title}>{t("auth.createAccount")}</Text>
+      <Text style={styles.subtitle}>{t("auth.registerTagline")}</Text>
 
-      <TextField label="Nom de l'atelier" value={workshopName} onChangeText={setWorkshopName} />
-      <TextField label="Votre nom complet" value={fullName} onChangeText={setFullName} />
+      <TextField label={t("auth.workshopName")} value={workshopName} onChangeText={setWorkshopName} />
+      <TextField label={t("auth.fullName")} value={fullName} onChangeText={setFullName} />
       <TextField
-        label="Téléphone"
+        label={t("auth.phone")}
         value={phone}
         onChangeText={setPhone}
         keyboardType="phone-pad"
         autoCapitalize="none"
         placeholder="+221700000000"
       />
-      <TextField label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry />
+      <TextField label={t("auth.password")} value={password} onChangeText={setPassword} secureTextEntry />
 
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
 
-      <Button label="Créer mon compte" onPress={handleSubmit} loading={loading} />
-      <Button label="J'ai déjà un compte" variant="secondary" onPress={() => navigation.navigate("Login")} />
+      <Button label={t("auth.createAccount")} onPress={handleSubmit} loading={loading} />
+      <Button label={t("auth.alreadyHaveAccount")} variant="secondary" onPress={() => navigation.navigate("Login")} />
     </ScrollView>
   );
 }

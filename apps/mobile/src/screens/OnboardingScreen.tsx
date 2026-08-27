@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Dimensions, FlatList, StyleSheet, Text, View, type ViewToken } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../theme/ThemeContext";
+import { useTranslation } from "../i18n/I18nContext";
 import { Button } from "../components/Button";
 
 interface Slide {
@@ -36,6 +37,7 @@ const { width } = Dimensions.get("window");
 
 export function OnboardingScreen({ onDone }: { onDone: () => void }) {
   const { colors, spacing, radius, typography } = useTheme();
+  const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList<Slide>>(null);
 
@@ -93,7 +95,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
       <View style={[styles.footer, { padding: spacing.lg, gap: spacing.sm }]}>
         <Button
-          label={isLast ? "Commencer" : "Suivant"}
+          label={isLast ? t("onboarding.start") : t("onboarding.next")}
           onPress={() => {
             if (isLast) {
               onDone();
@@ -102,7 +104,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
             }
           }}
         />
-        {!isLast ? <Button label="Passer" variant="ghost" onPress={onDone} /> : null}
+        {!isLast ? <Button label={t("onboarding.skip")} variant="ghost" onPress={onDone} /> : null}
       </View>
     </View>
   );

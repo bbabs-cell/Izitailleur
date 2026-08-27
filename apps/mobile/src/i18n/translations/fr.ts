@@ -1,0 +1,66 @@
+export const fr = {
+  common: {
+    save: "Enregistrer",
+    cancel: "Annuler",
+    add: "Ajouter",
+    loading: "Chargement…",
+    error: "Une erreur est survenue.",
+    retry: "Réessayer",
+    offline: "Hors connexion — données locales",
+    unsynced: "Non synchronisé",
+    conflict: "Conflit",
+  },
+  auth: {
+    appName: "IZITAILLEUR",
+    tagline: "L'assistant intelligent de votre atelier.",
+    registerTagline: "Votre atelier. Tout simplement.",
+    login: "Se connecter",
+    createWorkshop: "Créer un atelier",
+    createAccount: "Créer votre atelier",
+    alreadyHaveAccount: "J'ai déjà un compte",
+    phone: "Téléphone",
+    password: "Mot de passe",
+    workshopName: "Nom de l'atelier",
+    fullName: "Votre nom complet",
+  },
+  onboarding: {
+    skip: "Passer",
+    next: "Suivant",
+    start: "Commencer",
+  },
+  home: {
+    greeting: "Bonjour, {{name}}",
+    today: "Aujourd'hui",
+    urgent: "Urgent",
+    money: "Argent",
+    stock: "Stock",
+    team: "Équipe",
+    nothingUrgent: "Rien d'urgent",
+    nothingToday: "Rien de particulier prévu aujourd'hui.",
+  },
+  tabs: {
+    home: "Accueil",
+    orders: "Commandes",
+    calendar: "Calendrier",
+    customers: "Clients",
+    more: "Plus",
+  },
+  more: {
+    title: "Plus",
+    workshop: "Atelier",
+    finance: "Finances",
+    application: "Application",
+    logout: "Se déconnecter",
+  },
+  settings: {
+    title: "Apparence & langue",
+    theme: "Thème",
+    light: "Clair",
+    dark: "Sombre",
+    auto: "Automatique",
+    language: "Langue",
+  },
+} as const;
+
+type DeepStringify<T> = { [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]> };
+export type TranslationKeys = DeepStringify<typeof fr>;

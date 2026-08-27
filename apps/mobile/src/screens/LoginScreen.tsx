@@ -6,6 +6,7 @@ import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { useAuth } from "../auth/AuthContext";
 import { useThemedStyles } from "../theme/useThemedStyles";
+import { useTranslation } from "../i18n/I18nContext";
 import { ApiError } from "../api/client";
 import type { AuthStackParamList } from "../navigation/RootNavigator";
 
@@ -13,6 +14,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
 export function LoginScreen({ navigation }: Props) {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -44,12 +46,12 @@ export function LoginScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>IZITAILLEUR</Text>
-      <Text style={styles.subtitle}>L'assistant intelligent de votre atelier.</Text>
+      <Text style={styles.title}>{t("auth.appName")}</Text>
+      <Text style={styles.subtitle}>{t("auth.tagline")}</Text>
 
       <View style={styles.form}>
         <TextField
-          label="Téléphone"
+          label={t("auth.phone")}
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
@@ -58,16 +60,16 @@ export function LoginScreen({ navigation }: Props) {
           testID="login-phone"
         />
         <TextField
-          label="Mot de passe"
+          label={t("auth.password")}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
           testID="login-password"
         />
         {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
-        <Button label="Se connecter" onPress={handleSubmit} loading={loading} testID="login-submit" />
+        <Button label={t("auth.login")} onPress={handleSubmit} loading={loading} testID="login-submit" />
         <Button
-          label="Créer un atelier"
+          label={t("auth.createWorkshop")}
           variant="secondary"
           onPress={() => navigation.navigate("Register")}
         />

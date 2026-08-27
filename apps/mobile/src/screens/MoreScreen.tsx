@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { canViewFinance, type Role } from "@izitailleur/shared";
 import { useAuth } from "../auth/AuthContext";
 import { useTheme } from "../theme/ThemeContext";
+import { useTranslation } from "../i18n/I18nContext";
 import { Card } from "../components/Card";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
@@ -19,12 +20,13 @@ interface MenuItem {
 export function MoreScreen({ navigation }: Props) {
   const { user, logout } = useAuth();
   const { colors, spacing, radius, typography } = useTheme();
+  const { t } = useTranslation();
   const canFinance = !!user && canViewFinance(user.role as Role);
   const isAdmin = !!user && (user.role === "OWNER" || user.role === "ADMIN");
 
   const sections: { title: string; items: MenuItem[] }[] = [
     {
-      title: "Atelier",
+      title: t("more.workshop"),
       items: [
         { label: "Équipe", icon: "people-outline", onPress: () => navigation.navigate("Team") },
         { label: "Tissus", icon: "color-palette-outline", onPress: () => navigation.navigate("Fabrics") },
@@ -42,7 +44,7 @@ export function MoreScreen({ navigation }: Props) {
       ],
     },
     {
-      title: "Finances",
+      title: t("more.finance"),
       items: [
         {
           label: "Argent à récupérer",
@@ -59,7 +61,7 @@ export function MoreScreen({ navigation }: Props) {
       ],
     },
     {
-      title: "Application",
+      title: t("more.application"),
       items: [
         { label: "Notifications", icon: "notifications-outline", onPress: () => navigation.navigate("Notifications") },
         { label: "Synchronisation", icon: "sync-outline", onPress: () => navigation.navigate("SyncStatus") },
@@ -80,7 +82,7 @@ export function MoreScreen({ navigation }: Props) {
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={[styles.container, { padding: spacing.lg, gap: spacing.lg }]}
     >
-      <Text style={[typography.title, { color: colors.textPrimary }]}>Plus</Text>
+      <Text style={[typography.title, { color: colors.textPrimary }]}>{t("more.title")}</Text>
 
       {sections.map((section) => {
         const visibleItems = section.items.filter((item) => item.visible !== false);
@@ -127,7 +129,7 @@ export function MoreScreen({ navigation }: Props) {
         ]}
       >
         <Ionicons name="log-out-outline" size={20} color={colors.danger} />
-        <Text style={[typography.subtitle, { color: colors.danger }]}>Se déconnecter</Text>
+        <Text style={[typography.subtitle, { color: colors.danger }]}>{t("more.logout")}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
