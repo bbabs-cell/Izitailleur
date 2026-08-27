@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
+import { EmptyState } from "../components/EmptyState";
 import { customersRepo, type LocalCustomer } from "../offline/customersRepo";
 import { useSync } from "../offline/SyncContext";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Customers">;
@@ -31,6 +32,15 @@ export function CustomersListScreen({ navigation }: Props) {
   const [customers, setCustomers] = useState<LocalCustomer[]>([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const styles = useThemedStyles((t) => ({
+    container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    list: { gap: t.spacing.sm, paddingBottom: t.spacing.md, flexGrow: 1 },
+    card: { gap: t.spacing.xs },
+    headerRow: { flexDirection: "row", alignItems: "center", gap: t.spacing.sm },
+    name: { ...t.typography.subtitle, color: t.colors.textPrimary },
+    phone: { ...t.typography.caption, color: t.colors.textSecondary },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   const load = useCallback(async () => {
     try {
@@ -46,7 +56,6 @@ export function CustomersListScreen({ navigation }: Props) {
     return unsubscribe;
   }, [navigation, load]);
 
-  // Recharge depuis SQLite dès qu'une synchronisation vient de se terminer.
   useEffect(() => {
     if (syncStatus === "idle") {
       load();
@@ -66,7 +75,13 @@ export function CustomersListScreen({ navigation }: Props) {
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={<Text style={styles.empty}>Aucun client pour le moment.</Text>}
+        ListEmptyComponent={
+          <EmptyState
+            icon="people-outline"
+            title="Aucun client"
+            description="Ajoutez votre premier client pour commencer."
+          />
+        }
         renderItem={({ item }) => (
           <Pressable
             accessibilityRole="button"
@@ -90,42 +105,3 @@ export function CustomersListScreen({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  list: {
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  card: {
-    gap: spacing.xs,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  name: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-  },
-  phone: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  empty: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: spacing.lg,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
+import { EmptyState } from "../components/EmptyState";
 import { appointmentsApi, type Appointment } from "../api/appointments";
 import { appointmentsRepo, type LocalAppointment } from "../offline/appointmentsRepo";
 import { useSync } from "../offline/SyncContext";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Calendar">;
@@ -41,6 +42,17 @@ export function CalendarScreen({ navigation }: Props) {
   const [offline, setOffline] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const styles = useThemedStyles((t) => ({
+    container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    title: { ...t.typography.title, color: t.colors.textPrimary },
+    busyCard: { gap: t.spacing.xs },
+    list: { gap: t.spacing.sm, paddingBottom: t.spacing.md, flexGrow: 1 },
+    card: { gap: t.spacing.xs },
+    headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    eventTitle: { ...t.typography.subtitle, color: t.colors.textPrimary },
+    body: { ...t.typography.body, color: t.colors.textSecondary },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -104,7 +116,9 @@ export function CalendarScreen({ navigation }: Props) {
         onRefresh={load}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          !loading ? <Text style={styles.empty}>Aucun rendez-vous à venir.</Text> : null
+          !loading ? (
+            <EmptyState icon="calendar-outline" title="Aucun rendez-vous" description="Rien de prévu dans les 14 prochains jours." />
+          ) : null
         }
         renderItem={({ item }) => (
           <Card style={styles.card}>
@@ -133,48 +147,3 @@ export function CalendarScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  busyCard: {
-    gap: spacing.xs,
-  },
-  list: {
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  card: {
-    gap: spacing.xs,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  eventTitle: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-  },
-  body: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  empty: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: spacing.lg,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

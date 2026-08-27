@@ -1,16 +1,16 @@
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { canViewFinance, type DashboardResponse, type Role } from "@izitailleur/shared";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
-import { Button } from "../components/Button";
+import { SkeletonCard } from "../components/Skeleton";
 import { useAuth } from "../auth/AuthContext";
 import { useSync } from "../offline/SyncContext";
 import { ROLE_LABELS } from "../domain/roles";
 import { dashboardApi } from "../api/dashboard";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Home">;
@@ -33,11 +33,25 @@ function formatFcfa(amount: number): string {
 }
 
 export function HomeScreen({ navigation }: Props) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { status: syncStatus, pendingCount, unreadNotifications } = useSync();
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    title: { ...t.typography.title, color: t.colors.textPrimary },
+    subtitle: { ...t.typography.body, color: t.colors.textSecondary, marginBottom: t.spacing.md },
+    sectionTitle: { ...t.typography.subtitle, color: t.colors.textPrimary, marginTop: t.spacing.xs },
+    card: { gap: t.spacing.sm },
+    body: { ...t.typography.body, color: t.colors.textSecondary },
+    error: { ...t.typography.body, color: t.colors.danger },
+    row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    rowLabel: { ...t.typography.body, color: t.colors.textPrimary },
+    rowValue: { ...t.typography.body, color: t.colors.textSecondary, fontWeight: "700" },
+    rowValueDanger: { color: t.colors.danger },
+    rowValueWarning: { color: t.colors.warning },
+  }));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,41 +95,44 @@ export function HomeScreen({ navigation }: Props) {
 
       {/* Aujourd'hui */}
       <Text style={styles.sectionTitle}>Aujourd'hui</Text>
-      <Card style={styles.card}>
-        {loading && !dashboard ? (
-          <Text style={styles.body}>Chargement…</Text>
-        ) : dashboard ? (
-          <>
-            <Row
-              label="Rendez-vous"
-              value={dashboard.today.appointments.length}
-              onPress={() => navigation.navigate("Calendar")}
-            />
-            <Row
-              label="Commandes à livrer"
-              value={dashboard.today.dueOrders.length}
-              onPress={() => navigation.navigate("Orders")}
-            />
-            <Row label="Mes tâches en cours" value={dashboard.today.myTasks.length} />
-            {dashboard.today.appointments.length === 0 &&
-            dashboard.today.dueOrders.length === 0 &&
-            dashboard.today.myTasks.length === 0 ? (
-              <Text style={styles.body}>Rien de particulier prévu aujourd'hui.</Text>
-            ) : null}
-          </>
-        ) : null}
-      </Card>
+      {loading && !dashboard ? (
+        <Card style={{ padding: 0 }}>
+          <SkeletonCard />
+        </Card>
+      ) : dashboard ? (
+        <Card style={styles.card}>
+          <Row
+            styles={styles}
+            label="Rendez-vous"
+            value={dashboard.today.appointments.length}
+            onPress={() => navigation.navigate("Calendar")}
+          />
+          <Row
+            styles={styles}
+            label="Commandes à livrer"
+            value={dashboard.today.dueOrders.length}
+            onPress={() => navigation.navigate("Orders")}
+          />
+          <Row styles={styles} label="Mes tâches en cours" value={dashboard.today.myTasks.length} />
+          {dashboard.today.appointments.length === 0 &&
+          dashboard.today.dueOrders.length === 0 &&
+          dashboard.today.myTasks.length === 0 ? (
+            <Text style={styles.body}>Rien de particulier prévu aujourd'hui.</Text>
+          ) : null}
+        </Card>
+      ) : null}
 
       {/* Urgent */}
       <Text style={styles.sectionTitle}>Urgent</Text>
-      <Card style={styles.card}>
-        {dashboard ? (
-          urgentCount === 0 ? (
+      {dashboard ? (
+        <Card style={styles.card}>
+          {urgentCount === 0 ? (
             <Badge label="Rien d'urgent" tone="success" />
           ) : (
             <>
               {dashboard.urgent.lateOrders.length > 0 ? (
                 <Row
+                  styles={styles}
                   label="Commandes en retard"
                   value={dashboard.urgent.lateOrders.length}
                   tone="danger"
@@ -124,6 +141,7 @@ export function HomeScreen({ navigation }: Props) {
               ) : null}
               {dashboard.urgent.dueSoonOrders.length > 0 ? (
                 <Row
+                  styles={styles}
                   label="À livrer bientôt"
                   value={dashboard.urgent.dueSoonOrders.length}
                   tone="warning"
@@ -132,6 +150,7 @@ export function HomeScreen({ navigation }: Props) {
               ) : null}
               {dashboard.urgent.urgentIssues.length > 0 ? (
                 <Row
+                  styles={styles}
                   label="Problèmes urgents"
                   value={dashboard.urgent.urgentIssues.length}
                   tone="danger"
@@ -139,9 +158,9 @@ export function HomeScreen({ navigation }: Props) {
                 />
               ) : null}
             </>
-          )
-        ) : null}
-      </Card>
+          )}
+        </Card>
+      ) : null}
 
       {/* Argent */}
       {dashboard && dashboard.money ? (
@@ -149,9 +168,9 @@ export function HomeScreen({ navigation }: Props) {
           <Text style={styles.sectionTitle}>Argent</Text>
           <Pressable onPress={() => navigation.navigate("Debts")}>
             <Card style={styles.card}>
-              <Row label="Dettes clients" value={formatFcfa(dashboard.money.totalDebt)} />
-              <Row label="Clients débiteurs" value={dashboard.money.debtorsCount} />
-              <Row label="Revenu ce mois-ci" value={formatFcfa(dashboard.money.revenueThisMonth)} />
+              <Row styles={styles} label="Dettes clients" value={formatFcfa(dashboard.money.totalDebt)} />
+              <Row styles={styles} label="Clients débiteurs" value={dashboard.money.debtorsCount} />
+              <Row styles={styles} label="Revenu ce mois-ci" value={formatFcfa(dashboard.money.revenueThisMonth)} />
             </Card>
           </Pressable>
         </>
@@ -186,51 +205,25 @@ export function HomeScreen({ navigation }: Props) {
                 <Text style={styles.body}>Aucune tâche assignée en cours.</Text>
               ) : (
                 dashboard.team.tasksByAssignee.map((a) => (
-                  <Row key={a.userId} label={a.fullName} value={a.pendingCount} />
+                  <Row key={a.userId} styles={styles} label={a.fullName} value={a.pendingCount} />
                 ))
               )}
             </Card>
           </Pressable>
         </>
       ) : null}
-
-      <Button label="Assistant de l'atelier" onPress={() => navigation.navigate("Assistant")} />
-
-      <Button label="Clients" onPress={() => navigation.navigate("Customers")} />
-      <Button label="Commandes" onPress={() => navigation.navigate("Orders")} />
-      <Button label="Calendrier" onPress={() => navigation.navigate("Calendar")} />
-
-      {user && canViewFinance(user.role as Role) ? (
-        <>
-          <Button label="Argent à récupérer" onPress={() => navigation.navigate("Debts")} />
-          <Button label="Statistiques" onPress={() => navigation.navigate("FinanceStats")} />
-        </>
-      ) : null}
-
-      {user && (user.role === "OWNER" || user.role === "ADMIN") ? (
-        <Button
-          label="Paramètres de l'atelier"
-          variant="secondary"
-          onPress={() => navigation.navigate("WorkshopSettings")}
-        />
-      ) : null}
-
-      <Button label="Équipe" variant="secondary" onPress={() => navigation.navigate("Team")} />
-      <Button label="Tissus" variant="secondary" onPress={() => navigation.navigate("Fabrics")} />
-      <Button label="Fournisseurs" variant="secondary" onPress={() => navigation.navigate("Suppliers")} />
-      <Button label="Problèmes de l'atelier" variant="secondary" onPress={() => navigation.navigate("Issues")} />
-
-      <Button label="Se déconnecter" variant="secondary" onPress={logout} testID="logout-button" />
     </ScrollView>
   );
 }
 
 function Row({
+  styles,
   label,
   value,
   tone,
   onPress,
 }: {
+  styles: ReturnType<typeof useThemedStyles>;
   label: string;
   value: number | string;
   tone?: "danger" | "warning";
@@ -252,57 +245,3 @@ function Row({
   );
   return onPress ? <Pressable onPress={onPress}>{content}</Pressable> : content;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-    marginTop: spacing.xs,
-  },
-  card: {
-    gap: spacing.sm,
-  },
-  body: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  error: {
-    ...typography.body,
-    color: colors.danger,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  rowLabel: {
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  rowValue: {
-    ...typography.body,
-    color: colors.textSecondary,
-    fontWeight: "700",
-  },
-  rowValueDanger: {
-    color: colors.danger,
-  },
-  rowValueWarning: {
-    color: colors.warning,
-  },
-});
