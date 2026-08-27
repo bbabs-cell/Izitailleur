@@ -29,6 +29,7 @@ import { NotificationsScreen } from "../screens/NotificationsScreen";
 import { AssistantScreen } from "../screens/AssistantScreen";
 import { WorkshopSettingsScreen } from "../screens/WorkshopSettingsScreen";
 import { SearchScreen } from "../screens/SearchScreen";
+import { ReceiptScreen } from "../screens/ReceiptScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import { SplashScreen } from "../screens/SplashScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
@@ -70,6 +71,7 @@ export type AppStackParamList = {
   Issues: undefined;
   IssueForm: undefined;
   OrderPayments: { orderId: string };
+  Receipt: { receiptId: string };
   Debts: undefined;
   FinanceStats: undefined;
   SyncStatus: undefined;
@@ -190,6 +192,7 @@ export function RootNavigator() {
               component={OrderPaymentsScreen}
               options={{ title: "Paiements" }}
             />
+            <AppStack.Screen name="Receipt" component={ReceiptScreen} options={{ title: "Reçu" }} />
             <AppStack.Screen
               name="Debts"
               component={DebtsScreen}

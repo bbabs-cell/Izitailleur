@@ -7,7 +7,6 @@ import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { paymentsApi, type OrderPayments } from "../api/payments";
-import { receiptsApi } from "../api/receipts";
 import { invoiceApi } from "../api/invoice";
 import { ordersRepo } from "../offline/ordersRepo";
 import { ApiError } from "../api/client";
@@ -24,7 +23,6 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
   const [method, setMethod] = useState<PaymentMethod>("CASH");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [sharingId, setSharingId] = useState<string | null>(null);
   const [sharingInvoice, setSharingInvoice] = useState(false);
   const styles = useThemedStyles((t) => ({
     container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
@@ -73,18 +71,6 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
       setError(e instanceof ApiError ? e.message : "Paiement impossible.");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function shareReceipt(receiptId: string, number: string) {
-    setSharingId(receiptId);
-    setError(null);
-    try {
-      await receiptsApi.downloadAndShare(receiptId, number);
-    } catch {
-      setError("Impossible de générer ou partager le reçu.");
-    } finally {
-      setSharingId(null);
     }
   }
 
@@ -161,13 +147,8 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
             </View>
             <Text style={styles.body}>{new Date(payment.createdAt).toLocaleString("fr-FR")}</Text>
             {payment.receipt ? (
-              <Pressable
-                onPress={() => shareReceipt(payment.receipt!.id, payment.receipt!.number)}
-                disabled={sharingId === payment.receipt.id}
-              >
-                <Text style={styles.receiptLink}>
-                  {sharingId === payment.receipt.id ? "Génération…" : `🧾 Partager le reçu ${payment.receipt.number}`}
-                </Text>
+              <Pressable onPress={() => navigation.navigate("Receipt", { receiptId: payment.receipt!.id })}>
+                <Text style={styles.receiptLink}>🧾 Voir le reçu {payment.receipt.number}</Text>
               </Pressable>
             ) : null}
           </Card>
