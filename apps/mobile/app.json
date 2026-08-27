@@ -30,7 +30,9 @@
           "cameraPermission": "Izitailleur a besoin d'accéder à l'appareil photo pour photographier les commandes.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-sqlite"
     ],
     "extra": {
       "eas": {
