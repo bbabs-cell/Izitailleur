@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from "react-native";
-import { colors, radius, spacing, typography } from "../theme/tokens";
+import { useTheme } from "../theme/ThemeContext";
 
 interface TextFieldProps extends TextInputProps {
   label: string;
@@ -7,44 +7,39 @@ interface TextFieldProps extends TextInputProps {
 }
 
 export function TextField({ label, error, style, ...props }: TextFieldProps) {
+  const { colors, radius, spacing, typography } = useTheme();
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+    <View style={[styles.container, { gap: spacing.xs }]}>
+      <Text style={[typography.caption, { color: colors.textSecondary }]}>{label}</Text>
       <TextInput
-        style={[styles.input, error ? styles.inputError : null, style]}
-        placeholderTextColor={colors.textSecondary}
+        style={[
+          styles.input,
+          typography.body,
+          {
+            backgroundColor: colors.surfaceElevated,
+            borderRadius: radius.md,
+            borderColor: error ? colors.danger : colors.border,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.sm,
+            color: colors.textPrimary,
+          },
+          style,
+        ]}
+        placeholderTextColor={colors.textMuted}
         accessibilityLabel={label}
         {...props}
       />
-      {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
+      {error ? (
+        <Text style={[typography.caption, { color: colors.danger }]}>⚠️ {error}</Text>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
+  container: {},
   input: {
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    color: colors.textPrimary,
-    ...typography.body,
     minHeight: 48,
-  },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
   },
 });

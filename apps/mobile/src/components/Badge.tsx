@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { colors, radius, spacing, typography } from "../theme/tokens";
+import { useTheme } from "../theme/ThemeContext";
 
 type Tone = "success" | "warning" | "danger" | "info" | "neutral";
 
@@ -8,14 +8,6 @@ interface BadgeProps {
   tone?: Tone;
   icon?: string;
 }
-
-const toneColor: Record<Tone, string> = {
-  success: colors.success,
-  warning: colors.warning,
-  danger: colors.danger,
-  info: colors.info,
-  neutral: colors.textSecondary,
-};
 
 const defaultIcon: Record<Tone, string> = {
   success: "✅",
@@ -30,11 +22,39 @@ const defaultIcon: Record<Tone, string> = {
  * accompagnent toujours la couleur sémantique.
  */
 export function Badge({ label, tone = "neutral", icon }: BadgeProps) {
+  const { colors, radius, spacing, typography } = useTheme();
+  const toneColor: Record<Tone, string> = {
+    success: colors.success,
+    warning: colors.warning,
+    danger: colors.danger,
+    info: colors.info,
+    neutral: colors.textSecondary,
+  };
+  const toneSoft: Record<Tone, string> = {
+    success: colors.successSoft,
+    warning: colors.warningSoft,
+    danger: colors.dangerSoft,
+    info: colors.infoSoft,
+    neutral: colors.surfaceElevated,
+  };
   const color = toneColor[tone];
+
   return (
-    <View style={[styles.badge, { borderColor: color }]}>
+    <View
+      style={[
+        styles.badge,
+        {
+          borderColor: color,
+          backgroundColor: toneSoft[tone],
+          borderRadius: radius.pill,
+          paddingVertical: spacing.xs,
+          paddingHorizontal: spacing.sm,
+          gap: spacing.xs,
+        },
+      ]}
+    >
       <Text style={styles.icon}>{icon ?? defaultIcon[tone]}</Text>
-      <Text style={[styles.label, { color }]}>{label}</Text>
+      <Text style={[typography.caption, styles.label, { color }]}>{label}</Text>
     </View>
   );
 }
@@ -44,17 +64,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    gap: spacing.xs,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
     borderWidth: 1,
   },
   icon: {
     fontSize: 12,
   },
   label: {
-    ...typography.caption,
     fontWeight: "600",
   },
 });

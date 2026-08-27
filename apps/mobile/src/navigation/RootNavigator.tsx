@@ -1,5 +1,6 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { NavigationContainer, DarkTheme } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
+import { NavigationContainer, DarkTheme, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAuth } from "../auth/AuthContext";
 import { LoginScreen } from "../screens/LoginScreen";
@@ -30,7 +31,7 @@ import { NotificationsScreen } from "../screens/NotificationsScreen";
 import { AssistantScreen } from "../screens/AssistantScreen";
 import { WorkshopSettingsScreen } from "../screens/WorkshopSettingsScreen";
 import { SyncProvider } from "../offline/SyncContext";
-import { colors } from "../theme/tokens";
+import { useTheme } from "../theme/ThemeContext";
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -68,24 +69,25 @@ export type AppStackParamList = {
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const AppStack = createNativeStackNavigator<AppStackParamList>();
 
-const navTheme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    background: colors.background,
-    card: colors.surface,
-    text: colors.textPrimary,
-    border: colors.border,
-    primary: colors.accent,
-  },
-};
-
 export function RootNavigator() {
   const { status } = useAuth();
+  const { colors, scheme } = useTheme();
+
+  const navTheme = {
+    ...(scheme === "dark" ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(scheme === "dark" ? DarkTheme.colors : DefaultTheme.colors),
+      background: colors.background,
+      card: colors.surface,
+      text: colors.textPrimary,
+      border: colors.border,
+      primary: colors.accent,
+    },
+  };
 
   if (status === "loading") {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
@@ -93,6 +95,7 @@ export function RootNavigator() {
 
   return (
     <NavigationContainer theme={navTheme}>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       {status === "authenticated" ? (
         <SyncProvider>
         <AppStack.Navigator screenOptions={{ headerTintColor: colors.textPrimary }}>
@@ -206,6 +209,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background,
   },
 });

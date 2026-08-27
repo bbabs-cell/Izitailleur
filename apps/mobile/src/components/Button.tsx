@@ -1,7 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
-import { colors, radius, spacing, typography } from "../theme/tokens";
+import { useTheme } from "../theme/ThemeContext";
 
-type Variant = "primary" | "secondary" | "danger";
+type Variant = "primary" | "secondary" | "danger" | "ghost";
 
 interface ButtonProps {
   label: string;
@@ -12,12 +12,6 @@ interface ButtonProps {
   testID?: string;
 }
 
-const backgroundByVariant: Record<Variant, string> = {
-  primary: colors.accent,
-  secondary: colors.surfaceElevated,
-  danger: colors.danger,
-};
-
 export function Button({
   label,
   onPress,
@@ -26,7 +20,22 @@ export function Button({
   disabled = false,
   testID,
 }: ButtonProps) {
+  const { colors, radius, spacing, typography } = useTheme();
   const isDisabled = disabled || loading;
+
+  const backgroundByVariant: Record<Variant, string> = {
+    primary: colors.accent,
+    secondary: colors.surfaceElevated,
+    danger: colors.danger,
+    ghost: "transparent",
+  };
+  const labelColorByVariant: Record<Variant, string> = {
+    primary: colors.textInverse,
+    secondary: colors.textPrimary,
+    danger: colors.textInverse,
+    ghost: colors.accent,
+  };
+
   return (
     <Pressable
       testID={testID}
@@ -36,13 +45,23 @@ export function Button({
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
-        { backgroundColor: backgroundByVariant[variant], opacity: pressed ? 0.85 : isDisabled ? 0.5 : 1 },
+        {
+          backgroundColor: backgroundByVariant[variant],
+          borderRadius: radius.md,
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.lg,
+          borderWidth: variant === "ghost" ? 1 : 0,
+          borderColor: colors.border,
+          opacity: pressed ? 0.85 : isDisabled ? 0.5 : 1,
+        },
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={colors.textPrimary} />
+        <ActivityIndicator color={labelColorByVariant[variant]} />
       ) : (
-        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.label, typography.subtitle, { color: labelColorByVariant[variant] }]}>
+          {label}
+        </Text>
       )}
     </Pressable>
   );
@@ -50,15 +69,11 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
     minHeight: 48,
   },
   label: {
-    color: colors.textPrimary,
-    ...typography.subtitle,
+    textAlign: "center",
   },
 });
