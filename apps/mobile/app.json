@@ -17,10 +17,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,7 +27,8 @@
         "expo-image-picker",
         {
           "photosPermission": "Izitailleur a besoin d'accéder à vos photos pour illustrer les commandes.",
-          "cameraPermission": "Izitailleur a besoin d'accéder à l'appareil photo pour photographier les commandes."
+          "cameraPermission": "Izitailleur a besoin d'accéder à l'appareil photo pour photographier les commandes.",
+          "microphonePermission": false
         }
       ]
     ],
