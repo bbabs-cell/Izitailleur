@@ -12,7 +12,8 @@
     "api:start": "pnpm build:shared && pnpm --filter @izitailleur/api build && node apps/api/dist/src/main.js",
     "api:test": "pnpm build:shared && pnpm --filter @izitailleur/api test",
     "mobile:start": "pnpm build:shared && pnpm --filter @izitailleur/mobile start",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "eas-build-pre-install": "pnpm config set minimum-release-age 0"
   },
   "pnpm": {
     "minimumReleaseAge": 0
