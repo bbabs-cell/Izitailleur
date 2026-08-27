@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, Text, View } from "react-native";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { aiApi } from "../api/ai";
 import { ApiError } from "../api/client";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 
 interface Exchange {
   id: string;
@@ -25,6 +25,21 @@ export function AssistantScreen() {
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const styles = useThemedStyles((t) => ({
+    container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    title: { ...t.typography.title, color: t.colors.textPrimary },
+    subtitle: { ...t.typography.caption, color: t.colors.textSecondary },
+    suggestions: { gap: t.spacing.sm },
+    suggestionCard: { padding: t.spacing.md },
+    suggestionText: { ...t.typography.body, color: t.colors.accentAlt },
+    list: { gap: t.spacing.sm, paddingBottom: t.spacing.md },
+    exchangeCard: { gap: t.spacing.xs },
+    question: { ...t.typography.subtitle, color: t.colors.textPrimary },
+    answer: { ...t.typography.body, color: t.colors.textSecondary },
+    inputRow: { flexDirection: "row", alignItems: "flex-end", gap: t.spacing.sm },
+    inputField: { flex: 1 },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   async function submit(text: string) {
     const trimmed = text.trim();
@@ -91,57 +106,3 @@ export function AssistantScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  suggestions: {
-    gap: spacing.sm,
-  },
-  suggestionCard: {
-    padding: spacing.md,
-  },
-  suggestionText: {
-    ...typography.body,
-    color: colors.accentAlt,
-  },
-  list: {
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  exchangeCard: {
-    gap: spacing.xs,
-  },
-  question: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-  },
-  answer: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: spacing.sm,
-  },
-  inputField: {
-    flex: 1,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

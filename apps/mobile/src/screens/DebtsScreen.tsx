@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
+import { EmptyState } from "../components/EmptyState";
 import { financeApi, type DebtEntry } from "../api/finance";
 import { formatFcfa } from "../domain/payments";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Debts">;
@@ -14,6 +15,18 @@ export function DebtsScreen({ navigation }: Props) {
   const [debts, setDebts] = useState<DebtEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const styles = useThemedStyles((t) => ({
+    container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    totalCard: { gap: t.spacing.xs },
+    total: { ...t.typography.title, color: t.colors.warning },
+    list: { gap: t.spacing.sm, paddingBottom: t.spacing.md, flexGrow: 1 },
+    card: { gap: t.spacing.xs },
+    headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    name: { ...t.typography.subtitle, color: t.colors.textPrimary },
+    remaining: { ...t.typography.subtitle, color: t.colors.warning },
+    body: { ...t.typography.caption, color: t.colors.textSecondary },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -50,7 +63,7 @@ export function DebtsScreen({ navigation }: Props) {
         onRefresh={load}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          !loading ? <Text style={styles.empty}>Aucune dette en cours. 🎉</Text> : null
+          !loading ? <EmptyState icon="cash-outline" title="Aucune dette" description="Tous les clients sont à jour." /> : null
         }
         renderItem={({ item }) => (
           <Pressable onPress={() => navigation.navigate("OrderDetail", { orderId: item.orderId })}>
@@ -72,53 +85,3 @@ export function DebtsScreen({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  totalCard: {
-    gap: spacing.xs,
-  },
-  total: {
-    ...typography.title,
-    color: colors.warning,
-  },
-  list: {
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  card: {
-    gap: spacing.xs,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  name: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-  },
-  remaining: {
-    ...typography.subtitle,
-    color: colors.warning,
-  },
-  body: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  empty: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: spacing.lg,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

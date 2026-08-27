@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { createPaymentSchema, PAYMENT_METHODS, type PaymentMethod } from "@izitailleur/shared";
 import { Card } from "../components/Card";
@@ -12,7 +12,7 @@ import { invoiceApi } from "../api/invoice";
 import { ordersRepo } from "../offline/ordersRepo";
 import { ApiError } from "../api/client";
 import { PAYMENT_METHOD_LABELS, formatFcfa } from "../domain/payments";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "OrderPayments">;
@@ -26,6 +26,23 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [sharingId, setSharingId] = useState<string | null>(null);
   const [sharingInvoice, setSharingInvoice] = useState(false);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    summaryCard: { gap: t.spacing.xs },
+    form: { gap: t.spacing.sm },
+    section: { ...t.typography.subtitle, color: t.colors.textPrimary },
+    label: { ...t.typography.caption, color: t.colors.textSecondary },
+    row: { flexDirection: "row", flexWrap: "wrap", gap: t.spacing.xs },
+    paymentCard: { gap: t.spacing.xs },
+    headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    amount: { ...t.typography.subtitle, color: t.colors.textPrimary },
+    balance: { ...t.typography.subtitle },
+    due: { color: t.colors.warning },
+    paid: { color: t.colors.success },
+    body: { ...t.typography.body, color: t.colors.textSecondary },
+    receiptLink: { ...t.typography.caption, color: t.colors.accentAlt },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   const load = useCallback(async () => {
     try {
@@ -159,64 +176,3 @@ export function OrderPaymentsScreen({ route, navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  summaryCard: {
-    gap: spacing.xs,
-  },
-  form: {
-    gap: spacing.sm,
-  },
-  section: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  row: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  paymentCard: {
-    gap: spacing.xs,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  amount: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-  },
-  balance: {
-    ...typography.subtitle,
-  },
-  due: {
-    color: colors.warning,
-  },
-  paid: {
-    color: colors.success,
-  },
-  body: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  receiptLink: {
-    ...typography.caption,
-    color: colors.accentAlt,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

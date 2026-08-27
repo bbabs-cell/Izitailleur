@@ -1,16 +1,29 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, Text, View } from "react-native";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
+import { EmptyState } from "../components/EmptyState";
 import { notificationsApi, type Notification } from "../api/notifications";
 import { NOTIFICATION_ICONS, NOTIFICATION_TONE } from "../domain/notifications";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 
 export function NotificationsScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const styles = useThemedStyles((t) => ({
+    container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    list: { gap: t.spacing.sm, paddingBottom: t.spacing.md, flexGrow: 1 },
+    card: { gap: t.spacing.xs },
+    cardRead: { opacity: 0.6 },
+    headerRow: { flexDirection: "row", alignItems: "center", gap: t.spacing.sm },
+    icon: { fontSize: 18 },
+    title: { ...t.typography.subtitle, color: t.colors.textPrimary, flexShrink: 1 },
+    body: { ...t.typography.body, color: t.colors.textSecondary },
+    caption: { ...t.typography.caption, color: t.colors.textSecondary },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,7 +72,9 @@ export function NotificationsScreen() {
         onRefresh={load}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          !loading ? <Text style={styles.empty}>Aucune notification. Tout est sous contrôle. 🎉</Text> : null
+          !loading ? (
+            <EmptyState icon="notifications-outline" title="Aucune notification" description="Tout est sous contrôle." />
+          ) : null
         }
         renderItem={({ item }) => (
           <Pressable onPress={() => (!item.read ? markRead(item.id) : undefined)}>
@@ -79,53 +94,3 @@ export function NotificationsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  list: {
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  card: {
-    gap: spacing.xs,
-  },
-  cardRead: {
-    opacity: 0.6,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  icon: {
-    fontSize: 18,
-  },
-  title: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-    flexShrink: 1,
-  },
-  body: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  caption: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  empty: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: spacing.lg,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

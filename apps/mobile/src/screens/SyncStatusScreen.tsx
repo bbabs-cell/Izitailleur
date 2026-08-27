@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
@@ -9,7 +9,7 @@ import { appointmentsRepo, type LocalAppointment } from "../offline/appointments
 import { ordersRepo, type LocalOrder } from "../offline/ordersRepo";
 import { ORDER_STATUS_LABELS } from "../domain/orderStatus";
 import type { OrderStatus } from "@izitailleur/shared";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 
 const STATUS_LABELS: Record<string, string> = {
   idle: "À jour",
@@ -30,6 +30,18 @@ export function SyncStatusScreen() {
   const [customerConflicts, setCustomerConflicts] = useState<LocalCustomer[]>([]);
   const [appointmentConflicts, setAppointmentConflicts] = useState<LocalAppointment[]>([]);
   const [orderConflicts, setOrderConflicts] = useState<LocalOrder[]>([]);
+  const styles = useThemedStyles((t) => ({
+    container: { flexGrow: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    card: { gap: t.spacing.sm },
+    section: { ...t.typography.subtitle, color: t.colors.textPrimary },
+    conflictCard: { gap: t.spacing.sm },
+    compareRow: { flexDirection: "row", gap: t.spacing.md },
+    compareCol: { flex: 1, gap: t.spacing.xs },
+    row: { flexDirection: "row", gap: t.spacing.sm },
+    body: { ...t.typography.body, color: t.colors.textPrimary },
+    caption: { ...t.typography.caption, color: t.colors.textSecondary },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   const loadConflicts = useCallback(async () => {
     setCustomerConflicts(await customersRepo.listConflicts());
@@ -181,46 +193,3 @@ export function SyncStatusScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  card: {
-    gap: spacing.sm,
-  },
-  section: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-  },
-  conflictCard: {
-    gap: spacing.sm,
-  },
-  compareRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  compareCol: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  row: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  body: {
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  caption: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});

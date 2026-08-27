@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
+import { EmptyState } from "../components/EmptyState";
 import { issuesApi, type Issue } from "../api/issues";
 import { ISSUE_CATEGORY_LABELS, ISSUE_STATUS_LABELS } from "../domain/issues";
 import { ApiError } from "../api/client";
-import { colors, spacing, typography } from "../theme/tokens";
+import { useThemedStyles } from "../theme/useThemedStyles";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 import type { IssueCategory } from "@izitailleur/shared";
 
@@ -17,6 +18,16 @@ export function IssuesListScreen({ navigation }: Props) {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const styles = useThemedStyles((t) => ({
+    container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
+    list: { gap: t.spacing.sm, paddingBottom: t.spacing.md, flexGrow: 1 },
+    card: { gap: t.spacing.xs },
+    headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    title: { ...t.typography.subtitle, color: t.colors.textPrimary, flexShrink: 1 },
+    body: { ...t.typography.body, color: t.colors.textSecondary },
+    resolveLink: { ...t.typography.caption, color: t.colors.success },
+    error: { ...t.typography.caption, color: t.colors.danger },
+  }));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,7 +64,7 @@ export function IssuesListScreen({ navigation }: Props) {
         refreshing={loading}
         onRefresh={load}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={!loading ? <Text style={styles.empty}>Aucun problème signalé. 🎉</Text> : null}
+        ListEmptyComponent={!loading ? <EmptyState icon="checkmark-circle-outline" title="Aucun problème signalé" description="Tout va bien dans l'atelier." /> : null}
         renderItem={({ item }) => (
           <Card style={styles.card}>
             <View style={styles.headerRow}>
@@ -77,47 +88,3 @@ export function IssuesListScreen({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  list: {
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  card: {
-    gap: spacing.xs,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  title: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-    flexShrink: 1,
-  },
-  body: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  resolveLink: {
-    ...typography.caption,
-    color: colors.success,
-  },
-  empty: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: spacing.lg,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.danger,
-  },
-});
