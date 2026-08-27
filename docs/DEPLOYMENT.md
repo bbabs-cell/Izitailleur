@@ -104,7 +104,21 @@ bord — impossible d'ajouter `&pgbouncer=true` directement sur `DATABASE_URL`. 
 
 ## 5. Application mobile
 
-L'app mobile continue de pointer vers l'API via `EXPO_PUBLIC_API_URL` (voir `apps/mobile/src/api/client.ts`).
-Une fois l'API déployée sur Vercel, définir cette variable sur l'URL Vercel avant de builder l'app
-avec EAS Build (non couvert par ce document — décision de mise en boutique/distribution à traiter
-séparément).
+L'app mobile pointe vers l'API via `EXPO_PUBLIC_API_URL` (voir `apps/mobile/src/api/client.ts`,
+repli par défaut sur `http://10.0.2.2:3000` pour le développement local en émulateur Android).
+
+`apps/mobile/eas.json` définit trois profils de build :
+- **development** : pas de variable définie, utilise le repli local (API tournant sur votre
+  machine) — pour le développement au quotidien.
+- **preview** et **production** : `EXPO_PUBLIC_API_URL` pointe vers l'API Vercel réelle
+  (`https://api-puce-omega-36.vercel.app`).
+
+**Ce qui reste à faire (nécessite votre compte Expo, non disponible dans cet environnement)** :
+1. `npm install -g eas-cli` puis `eas login` (compte Expo — gratuit, à créer si besoin).
+2. Depuis `apps/mobile/`, lancer `eas build:configure` — ça relie le projet à votre compte Expo
+   et ajoute automatiquement un `projectId` réel dans `app.json` (absent pour l'instant).
+3. `eas build --platform android --profile production` (ou `ios`) pour lancer un vrai build
+   installable, avec `EXPO_PUBLIC_API_URL` déjà pointé vers la production.
+
+La distribution finale (Play Store, App Store, ou installation directe de l'APK) est une décision
+séparée, non traitée ici.
