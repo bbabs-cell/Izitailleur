@@ -13,5 +13,8 @@
     "api:test": "pnpm build:shared && pnpm --filter @izitailleur/api test",
     "mobile:start": "pnpm build:shared && pnpm --filter @izitailleur/mobile start",
     "lint": "pnpm -r lint"
+  },
+  "pnpm": {
+    "minimumReleaseAge": 0
   }
 }
