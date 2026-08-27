@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -6,6 +7,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useTheme } from "../theme/ThemeContext";
 import { useTranslation } from "../i18n/I18nContext";
 import { Card } from "../components/Card";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import type { AppStackParamList } from "../navigation/RootNavigator";
 
 type Props = NativeStackScreenProps<AppStackParamList, "More">;
@@ -21,6 +23,7 @@ export function MoreScreen({ navigation }: Props) {
   const { user, logout } = useAuth();
   const { colors, spacing, radius, typography } = useTheme();
   const { t } = useTranslation();
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
   const canFinance = !!user && canViewFinance(user.role as Role);
   const isAdmin = !!user && (user.role === "OWNER" || user.role === "ADMIN");
 
@@ -122,7 +125,7 @@ export function MoreScreen({ navigation }: Props) {
       })}
 
       <TouchableOpacity
-        onPress={logout}
+        onPress={() => setConfirmingLogout(true)}
         testID="logout-button"
         style={[
           styles.row,
@@ -138,6 +141,19 @@ export function MoreScreen({ navigation }: Props) {
         <Ionicons name="log-out-outline" size={20} color={colors.danger} />
         <Text style={[typography.subtitle, { color: colors.danger }]}>{t("more.logout")}</Text>
       </TouchableOpacity>
+
+      <ConfirmDialog
+        visible={confirmingLogout}
+        title={t("more.logout")}
+        description="Vous devrez vous reconnecter avec votre téléphone et votre mot de passe."
+        confirmLabel={t("more.logout")}
+        destructive
+        onConfirm={() => {
+          setConfirmingLogout(false);
+          logout();
+        }}
+        onCancel={() => setConfirmingLogout(false)}
+      />
     </ScrollView>
   );
 }
