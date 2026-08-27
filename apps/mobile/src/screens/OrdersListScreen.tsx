@@ -36,6 +36,7 @@ export function OrdersListScreen({ navigation }: Props) {
   const [orders, setOrders] = useState<LocalOrder[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
+  const [loaded, setLoaded] = useState(false);
   const styles = useThemedStyles((t) => ({
     container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
     filters: { flexDirection: "row", gap: t.spacing.xs, flexWrap: "wrap" },
@@ -54,6 +55,8 @@ export function OrdersListScreen({ navigation }: Props) {
       setError(null);
     } catch {
       setError("Impossible de lire les commandes enregistrées localement.");
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -88,15 +91,17 @@ export function OrdersListScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <EmptyState
-            icon="shirt-outline"
-            title="Aucune commande"
-            description={
-              filter === "all"
-                ? "Créez votre première commande pour commencer."
-                : "Aucune commande ne correspond à ce filtre."
-            }
-          />
+          loaded ? (
+            <EmptyState
+              icon="shirt-outline"
+              title="Aucune commande"
+              description={
+                filter === "all"
+                  ? "Créez votre première commande pour commencer."
+                  : "Aucune commande ne correspond à ce filtre."
+              }
+            />
+          ) : null
         }
         renderItem={({ item }) => {
           const late = isOrderLate(item.dueDate, item.status as OrderStatus);

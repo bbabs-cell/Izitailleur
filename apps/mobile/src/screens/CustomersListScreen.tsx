@@ -34,6 +34,7 @@ export function CustomersListScreen({ navigation }: Props) {
   const [customers, setCustomers] = useState<LocalCustomer[]>([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const styles = useThemedStyles((t) => ({
     container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
     list: { gap: t.spacing.sm, paddingBottom: t.spacing.md, flexGrow: 1 },
@@ -50,6 +51,8 @@ export function CustomersListScreen({ navigation }: Props) {
       setError(null);
     } catch {
       setError("Impossible de lire les clients enregistrés localement.");
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -78,11 +81,13 @@ export function CustomersListScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <EmptyState
-            icon="people-outline"
-            title="Aucun client"
-            description="Ajoutez votre premier client pour commencer."
-          />
+          loaded ? (
+            <EmptyState
+              icon="people-outline"
+              title="Aucun client"
+              description="Ajoutez votre premier client pour commencer."
+            />
+          ) : null
         }
         renderItem={({ item }) => (
           <Pressable

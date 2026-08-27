@@ -5,6 +5,7 @@ import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
+import { SkeletonCard } from "../components/Skeleton";
 import { employeesApi, type Employee } from "../api/employees";
 import { useAuth } from "../auth/AuthContext";
 import { ROLE_LABELS, canManageTeam } from "../domain/roles";
@@ -27,6 +28,7 @@ export function TeamListScreen({ navigation }: Props) {
     name: { ...t.typography.subtitle, color: t.colors.textPrimary },
     phone: { ...t.typography.caption, color: t.colors.textSecondary },
     error: { ...t.typography.caption, color: t.colors.danger },
+    skeletonList: { gap: t.spacing.sm },
   }));
 
   const load = useCallback(async () => {
@@ -51,23 +53,35 @@ export function TeamListScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
-      <FlatList
-        data={employees}
-        keyExtractor={(item) => item.id}
-        refreshing={loading}
-        onRefresh={load}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={<EmptyState icon="people-outline" title="Équipe vide" description="Aucun membre pour le moment." />}
-        renderItem={({ item }) => (
-          <Card style={styles.card}>
-            <Text style={styles.name}>{item.fullName}</Text>
-            <View style={styles.row}>
-              <Badge label={ROLE_LABELS[item.role as Role] ?? item.role} tone="info" />
-              <Text style={styles.phone}>{item.phone}</Text>
-            </View>
-          </Card>
-        )}
-      />
+      {loading && employees.length === 0 ? (
+        <View style={styles.skeletonList}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
+      ) : (
+        <FlatList
+          data={employees}
+          keyExtractor={(item) => item.id}
+          refreshing={loading}
+          onRefresh={load}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            !loading ? (
+              <EmptyState icon="people-outline" title="Équipe vide" description="Aucun membre pour le moment." />
+            ) : null
+          }
+          renderItem={({ item }) => (
+            <Card style={styles.card}>
+              <Text style={styles.name}>{item.fullName}</Text>
+              <View style={styles.row}>
+                <Badge label={ROLE_LABELS[item.role as Role] ?? item.role} tone="info" />
+                <Text style={styles.phone}>{item.phone}</Text>
+              </View>
+            </Card>
+          )}
+        />
+      )}
       {canManage ? (
         <Button label="Inviter un membre" onPress={() => navigation.navigate("TeamInvite")} />
       ) : null}

@@ -6,6 +6,7 @@ import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { EmptyState } from "../components/EmptyState";
+import { SkeletonCard } from "../components/Skeleton";
 import { suppliersApi, type Supplier } from "../api/suppliers";
 import { ApiError } from "../api/client";
 import { useThemedStyles } from "../theme/useThemedStyles";
@@ -21,6 +22,7 @@ export function SuppliersListScreen({ navigation }: Props) {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [listLoading, setListLoading] = useState(true);
   const styles = useThemedStyles((t) => ({
     container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
     form: { gap: t.spacing.sm },
@@ -29,13 +31,17 @@ export function SuppliersListScreen({ navigation }: Props) {
     name: { ...t.typography.subtitle, color: t.colors.textPrimary },
     body: { ...t.typography.caption, color: t.colors.textSecondary },
     error: { ...t.typography.caption, color: t.colors.danger },
+    skeletonList: { gap: t.spacing.sm, paddingTop: t.spacing.sm },
   }));
 
   const load = useCallback(async () => {
+    setListLoading(true);
     try {
       setSuppliers(await suppliersApi.list());
     } catch {
       setError("Impossible de charger les fournisseurs.");
+    } finally {
+      setListLoading(false);
     }
   }, []);
 
@@ -73,18 +79,29 @@ export function SuppliersListScreen({ navigation }: Props) {
         <Button label={t("common.add")} onPress={handleAdd} loading={loading} />
       </Card>
 
-      <FlatList
-        data={suppliers}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={<EmptyState icon="cube-outline" title="Aucun fournisseur" description="Ajoutez votre premier fournisseur." />}
-        renderItem={({ item }) => (
-          <Card style={styles.card}>
-            <Text style={styles.name}>{item.name}</Text>
-            {item.phone ? <Text style={styles.body}>{item.phone}</Text> : null}
-          </Card>
-        )}
-      />
+      {listLoading && suppliers.length === 0 ? (
+        <View style={styles.skeletonList}>
+          <SkeletonCard />
+          <SkeletonCard />
+        </View>
+      ) : (
+        <FlatList
+          data={suppliers}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            !listLoading ? (
+              <EmptyState icon="cube-outline" title="Aucun fournisseur" description="Ajoutez votre premier fournisseur." />
+            ) : null
+          }
+          renderItem={({ item }) => (
+            <Card style={styles.card}>
+              <Text style={styles.name}>{item.name}</Text>
+              {item.phone ? <Text style={styles.body}>{item.phone}</Text> : null}
+            </Card>
+          )}
+        />
+      )}
     </View>
   );
 }
