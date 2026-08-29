@@ -34,6 +34,8 @@ import { SubscriptionScreen } from "../screens/SubscriptionScreen";
 import { ModelsListScreen } from "../screens/ModelsListScreen";
 import { ModelFormScreen } from "../screens/ModelFormScreen";
 import { ModelDetailScreen } from "../screens/ModelDetailScreen";
+import { ExpensesListScreen } from "../screens/ExpensesListScreen";
+import { ExpenseFormScreen } from "../screens/ExpenseFormScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import { SplashScreen } from "../screens/SplashScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
@@ -89,6 +91,8 @@ export type AppStackParamList = {
   Models: undefined;
   ModelForm: undefined;
   ModelDetail: { modelId: string };
+  Expenses: undefined;
+  ExpenseForm: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -256,6 +260,12 @@ export function RootNavigator() {
               name="ModelDetail"
               component={ModelDetailScreen}
               options={{ title: "Modèle" }}
+            />
+            <AppStack.Screen name="Expenses" component={ExpensesListScreen} options={{ title: "Dépenses" }} />
+            <AppStack.Screen
+              name="ExpenseForm"
+              component={ExpenseFormScreen}
+              options={{ title: "Nouvelle dépense" }}
             />
           </AppStack.Navigator>
         </SyncProvider>

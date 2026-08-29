@@ -5,14 +5,17 @@ import { Card } from "../components/Card";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { Chip } from "../components/Chip";
+import { TextField } from "../components/TextField";
 import { EmptyState } from "../components/EmptyState";
 import { ordersRepo, type LocalOrder } from "../offline/ordersRepo";
 import { useSync } from "../offline/SyncContext";
+import { useAuth } from "../auth/AuthContext";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE, isOrderLate } from "../domain/orderStatus";
+import { formatFcfa } from "../domain/payments";
 import { useThemedStyles } from "../theme/useThemedStyles";
 import { useTranslation } from "../i18n/I18nContext";
 import type { AppStackParamList } from "../navigation/RootNavigator";
-import type { OrderStatus } from "@izitailleur/shared";
+import { canViewFinance, type OrderStatus, type Role } from "@izitailleur/shared";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Orders">;
 
@@ -29,14 +32,21 @@ const FILTERS: { key: "all" | "late" | OrderStatus; label: string }[] = [
  * Source de données : la base SQLite locale (offline-first), tenue à jour par le SyncContext.
  * Les créations écrivent immédiatement en local ; la référence (numéro séquentiel) n'est
  * connue qu'après synchronisation avec le serveur (affichée "en attente" en attendant).
+ *
+ * Le prix/acompte ne sont affichés que pour les rôles ayant accès aux finances : le serveur les
+ * renvoie déjà à 0 pour les autres rôles (voir redactOrderFinancials côté API), mais le masquage
+ * doit aussi être fait ici pour ne pas afficher un "0 FCFA" trompeur.
  */
 export function OrdersListScreen({ navigation }: Props) {
   const { status: syncStatus } = useSync();
+  const { user } = useAuth();
   const { t } = useTranslation();
   const [orders, setOrders] = useState<LocalOrder[]>([]);
+  const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
   const [loaded, setLoaded] = useState(false);
+  const canFinance = !!user && canViewFinance(user.role as Role);
   const styles = useThemedStyles((t) => ({
     container: { flex: 1, backgroundColor: t.colors.background, padding: t.spacing.lg, gap: t.spacing.md },
     filters: { flexDirection: "row", gap: t.spacing.xs, flexWrap: "wrap" },
@@ -46,6 +56,7 @@ export function OrdersListScreen({ navigation }: Props) {
     reference: { ...t.typography.subtitle, color: t.colors.textPrimary },
     model: { ...t.typography.body, color: t.colors.textPrimary },
     customer: { ...t.typography.caption, color: t.colors.textSecondary },
+    amount: { ...t.typography.caption, color: t.colors.success },
     error: { ...t.typography.caption, color: t.colors.danger },
   }));
 
@@ -70,15 +81,31 @@ export function OrdersListScreen({ navigation }: Props) {
   }, [syncStatus, load]);
 
   const filtered = useMemo(() => {
-    if (filter === "all") return orders;
-    if (filter === "late") return orders.filter((o) => isOrderLate(o.dueDate, o.status as OrderStatus));
-    return orders.filter((o) => o.status === filter);
-  }, [orders, filter]);
+    let result = orders;
+    if (filter === "late") {
+      result = result.filter((o) => isOrderLate(o.dueDate, o.status as OrderStatus));
+    } else if (filter !== "all") {
+      result = result.filter((o) => o.status === filter);
+    }
+    const needle = search.trim().toLowerCase();
+    if (needle) {
+      result = result.filter(
+        (o) =>
+          o.modelName.toLowerCase().includes(needle) ||
+          o.customerFirstName.toLowerCase().includes(needle) ||
+          o.customerLastName.toLowerCase().includes(needle) ||
+          (o.reference ?? "").toLowerCase().includes(needle),
+      );
+    }
+    return result;
+  }, [orders, filter, search]);
 
   return (
     <View style={styles.container}>
       {syncStatus === "offline" ? <Badge label={t("common.offline")} tone="warning" /> : null}
       {error ? <Text style={styles.error}>⚠️ {error}</Text> : null}
+
+      <TextField label="Rechercher" value={search} onChangeText={setSearch} placeholder="Référence, modèle ou client" />
 
       <View style={styles.filters}>
         {FILTERS.map((f) => (
@@ -96,9 +123,9 @@ export function OrdersListScreen({ navigation }: Props) {
               icon="shirt-outline"
               title="Aucune commande"
               description={
-                filter === "all"
+                filter === "all" && !search
                   ? "Créez votre première commande pour commencer."
-                  : "Aucune commande ne correspond à ce filtre."
+                  : "Aucune commande ne correspond à cette recherche."
               }
             />
           ) : null
@@ -122,6 +149,11 @@ export function OrdersListScreen({ navigation }: Props) {
                 <Text style={styles.customer}>
                   {item.customerFirstName} {item.customerLastName}
                 </Text>
+                {canFinance ? (
+                  <Text style={styles.amount}>
+                    {formatFcfa(item.price)} — acompte {formatFcfa(item.deposit)}
+                  </Text>
+                ) : null}
                 <View style={styles.headerRow}>
                   {late ? <Badge label="En retard" tone="danger" /> : null}
                   {item.dirty ? <Badge label={t("common.unsynced")} tone="info" /> : null}

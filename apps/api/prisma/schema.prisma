@@ -42,6 +42,7 @@ model Workshop {
   receipts      Receipt[]
   notifications Notification[]
   models        GarmentModel[]
+  expenses      Expense[]
 }
 
 model User {
@@ -61,6 +62,7 @@ model User {
   assignedTasks    OrderTask[]     @relation("TaskAssignee")
   assignedIssues   WorkshopIssue[] @relation("IssueAssignee")
   recordedPayments Payment[]       @relation("PaymentRecorder")
+  recordedExpenses Expense[]       @relation("ExpenseRecorder")
 
   @@index([workshopId])
 }
@@ -398,6 +400,23 @@ model Payment {
 
   @@index([workshopId])
   @@index([orderId])
+}
+
+model Expense {
+  id           String    @id @default(uuid())
+  workshopId   String
+  workshop     Workshop  @relation(fields: [workshopId], references: [id])
+  amount       Int
+  description  String
+  category     String?
+  recordedById String?
+  recordedBy   User?     @relation("ExpenseRecorder", fields: [recordedById], references: [id])
+  spentAt      DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+
+  @@index([workshopId])
+  @@index([workshopId, spentAt])
 }
 
 model Receipt {

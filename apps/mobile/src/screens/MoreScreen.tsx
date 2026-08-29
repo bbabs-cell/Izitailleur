@@ -62,6 +62,12 @@ export function MoreScreen({ navigation }: Props) {
           onPress: () => navigation.navigate("FinanceStats"),
           visible: canFinance,
         },
+        {
+          label: "Dépenses",
+          icon: "wallet-outline",
+          onPress: () => navigation.navigate("Expenses"),
+          visible: canFinance,
+        },
       ],
     },
     {
